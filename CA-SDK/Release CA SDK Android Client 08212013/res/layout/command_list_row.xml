@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rowCommandList"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:weightSum="10" >
+
+ <!--    <TextView
+        android:id="@+id/tv_sw_temp"
+        android:layout_width="0dip"
+        android:layout_height="20dip"
+        android:layout_gravity="center_vertical|left"
+ 		android:layout_weight="3"
+        android:textColor="#a4a4a4"
+        android:textSize="16sp" >
+    </TextView> -->
+
+    <Switch
+        android:id="@+id/sw_command"
+        android:layout_width="wrap_content"
+        android:layout_height="55dip"
+        android:layout_gravity="center_vertical|right"
+        android:layout_weight="10"
+        />
+
+</LinearLayout>

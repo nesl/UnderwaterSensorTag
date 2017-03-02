@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.6  (Linux)">
+	<META NAME="AUTHOR" CONTENT="Jibran Ahmed">
+	<META NAME="CREATED" CONTENT="20130417;14010000">
+	<META NAME="CHANGEDBY" CONTENT="Jibran Ahmed">
+	<META NAME="CHANGED" CONTENT="20130418;11560000">
+	<META NAME="AppVersion" CONTENT="14.0000">
+	<META NAME="DocSecurity" CONTENT="0">
+	<META NAME="HyperlinksChanged" CONTENT="false">
+	<META NAME="LinksUpToDate" CONTENT="false">
+	<META NAME="ScaleCrop" CONTENT="false">
+	<META NAME="ShareDoc" CONTENT="false">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { size: 4.96in 7.06in; margin-left: 0.59in; margin-right: 0.59in; margin-top: 0.79in; margin-bottom: 0.79in }
+		P { margin-bottom: 0.08in; direction: ltr; color: #000000; font-size: 10pt; widows: 2; orphans: 2 }
+		H1 { margin-top: 0.14in; margin-bottom: 0in; background: #4f81bd; border: 3.00pt solid #4f81bd; padding: 0in; direction: ltr; text-transform: uppercase; color: #ffffff; widows: 2; orphans: 2; page-break-after: auto }
+		H1.western { font-family: "Calibri", serif; font-size: 11pt }
+		H1.cjk { font-family: "나눔고딕코딩"; font-size: 11pt }
+		H1.ctl { font-family: ; font-size: 11pt }
+		H2 { margin-top: 0.14in; margin-bottom: 0in; background: #dbe5f1; border: 3.00pt solid #dbe5f1; padding: 0in; direction: ltr; text-transform: uppercase; color: #000000; widows: 2; orphans: 2; page-break-after: auto }
+		H2.western { font-family: "Calibri", serif; font-size: 11pt; font-weight: normal }
+		H2.cjk { font-family: "나눔고딕코딩"; font-size: 11pt; font-weight: normal }
+		H2.ctl { font-family: ; font-size: 11pt; font-weight: normal }
+		A:link { color: #0000ff; so-language: zxx }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" TEXT="#000000" LINK="#0000ff" DIR="LTR">
+<H1 CLASS="western"><A NAME="_GoBack"></A>CA-SDK CLIENT 
+</H1>
+<H2 CLASS="western">INTRODUCTION</H2>
+<P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0.14in">CA-SDK
+Client is an app which allows developers to evaluate the features and
+sensor capabilities of the InvenSense CA-SDK platform. The InvenSense
+CA-SDK solution delivers a sensor platform capable of tracking
+attitude by combining the InvenSense MPU-9250 9-axis MotionTracking
+device (gyroscope/accelerometer/magnetometer) with an onboard
+microcontroller and Bluetooth radio module, in addition, it includes
+external sensors of Light, Humidity, Temperature, Pressure,
+Proximity, and UV on a single board. This app can be made available
+in source code for developers of custom specific code for CA-SDK
+developers. For further information, please register at
+<A HREF="http://www.invensense.com/developers">http://www.invensense.com/developers</A>.
+To purchase the CA-SDK platform, please visit
+<A HREF="http://www.invensense.com/mems/gyro/nineaxis.html">http://www.invensense.com/mems/gyro/nineaxis.html</A></P>
+<P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0.14in"><B>SENSORS</B>
+<B>tab</B> is intended to display the status and values of different
+sensors while <B>DISPLAY tab </B>is intended to illustrate the
+capabilities of eMPL.</P>
+<H2 CLASS="western">COMMANDS DESCRIPTION</H2>
+<OL>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Accelerometer
+	Sensor:</B></FONT><FONT COLOR="#1f497d"> </FONT>Turn on/off the
+	accelerometer sensor only when DMP is not ON.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Gyro
+	Sensor:</B></FONT><B> </B>Turn on/off the gyroscope sensor only when
+	DMP is not ON.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Compass
+	Sensor:</B></FONT> Turn on/off the compass sensor only when DMP is
+	not ON.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Accelerometer
+	Values Display:</B></FONT> Toggle the status of printing
+	acceleration in the display list section. 
+	</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Gyro
+	Values Display:</B></FONT> Toggle the status of printing gyro values
+	in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Compass
+	Values Display:</B></FONT> Toggle the status of printing compass
+	values in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Euler
+	Values Display:</B></FONT> Toggle the status of printing euler
+	values in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Rot.
+	Matrix Values Display:</B></FONT> Toggle the status of printing
+	rotation matrix values in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Quaternion
+	Values Display:</B></FONT> Toggle the status of printing quaternion
+	values in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Heading
+	Value Display:</B></FONT> Toggle the status of printing heading
+	value in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Pedometer
+	Display:</B></FONT> Toggle the status of printing walk count values
+	in the messages list section, also reset the walk count and
+	pedometer display to zero.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Other
+	Sensors Display:</B></FONT> Toggle the status of printing pressure,
+	temperature, humidity, UV Index values in the display list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Magnetic
+	Disturbance:</B></FONT> Turn on/off the magnetic disturbance for
+	CA-SDK.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Low
+	Power Quaternion:</B></FONT> Toggle low power quaternions.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>DMP:
+	</B></FONT>Turn on/off DMP.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Dump
+	Gyro Register Values:</B></FONT> Read the gyro register value and
+	will show it in the messages list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Test
+	Low Power Accel Values:</B></FONT> Test low power accel values and
+	will display the result in messages list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Load
+	Calib Data:</B></FONT> Load the calibration values of gyro from
+	internal flash memory.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Store
+	Calib Data:</B></FONT> Store the calibration values of gyro into
+	internal flash memory.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Self
+	Test:</B></FONT> Run the self test and display the result in
+	messages list section</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Sensor Data Rate to 10Hz:</B></FONT> If DMP is on then it will set
+	the DMP FIFO rate to 10 Hz else it will set the gyro sample rate to
+	10Hz.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Sensor Data Rate to 20Hz:</B></FONT> Same as for command no. 21
+	except with frequency of 20 Hz.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Sensor Data Rate to 40Hz:</B></FONT> Same as for command no. 22
+	except with frequency of 40 Hz.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Sensor Data Rate to 50Hz:</B></FONT> Same as for command no. 21
+	except with frequency of 50 Hz.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Interrupt on Gesture Event Only:</B></FONT> Set hardware to
+	interrupt on gesture event only. This feature is useful for keeping
+	the MCU asleep until the DMP detects as a tap or orientation event.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Interrupt Periodically:</B></FONT> Set hardware to interrupt
+	periodically</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Reset
+	Pedometer:</B></FONT> Reset the pedometer count and walk time to
+	zero.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Reset
+	Board</B></FONT>: Reset the whole CA-SDK hardware and initialize all
+	the parameters from the start.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Set
+	Motion Interrupt Mode:</B></FONT> Set the hardware to interrupt on
+	motion and no-motion event.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Get
+	eMPL Version:</B></FONT> Fetch the eMPL version and display it in
+	the messages list section.</P>
+	<LI><P ALIGN=JUSTIFY STYLE="margin-top: 0.14in; margin-bottom: 0in"><FONT COLOR="#1f497d"><B>Get
+	Compass Status:</B></FONT> Fetch the compass accuracy and status and
+	display it in the messages list section.</P>
+</OL>
+<H2 CLASS="western">DISCLAIMER NOTICE</H2>
+<P STYLE="margin-top: 0.14in; margin-bottom: 0.14in">InvenSense Inc.
+(NYSE: INVN) is the leading provider of MotionTracking™ devices for
+consumer electronics products such as smartphones, tablets, game
+controllers, smart TVs, and wearable sensors. Motion Interface is
+rapidly becoming a key function in every consumer electronics device
+as it provides a more intuitive way for consumers to interact with
+their electronic devices by tracking their motions in free space and
+delivering these motions as input commands.<FONT SIZE=2 STYLE="font-size: 9pt">&nbsp;</FONT></P>
+<H2 CLASS="western">REFERENCES</H2>
+<UL>
+	<LI><P STYLE="margin-top: 0.14in; margin-bottom: 0.14in"><A HREF="http://www.invensense.com/mems/gyro/documents/articles/010713-invensense-announces-contextual-awareness-sdk-for-embedded-developers-and-mobile-devices.html">http://www.invensense.com/mems/gyro/documents/articles/010713-invensense-announces-contextual-awareness-sdk-for-embedded-developers-and-mobile-devices.html</A></P>
+</UL>
+</BODY>
+</HTML>

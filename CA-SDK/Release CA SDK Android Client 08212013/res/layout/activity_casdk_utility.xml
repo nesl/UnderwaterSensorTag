@@ -1,0 +1,149 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    android:orientation="horizontal"
+    android:weightSum="3" >
+
+    <LinearLayout
+        android:id="@+id/ll_CommandsDisplayContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:weightSum="2" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="13dp"
+                android:text="Commands"
+                android:textColor="#2cb4e6"
+                android:textSize="22sp" />
+
+            <ListView
+                android:id="@+id/lv_commands"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="#c6c6c6"
+                android:dividerHeight="2dp" >
+            </ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="13dp"
+                android:layout_marginTop="13dp"
+                android:text="Display"
+                android:textColor="#2cb4e6"
+                android:textSize="22sp" />
+
+           <LinearLayout
+               android:layout_width="match_parent"
+               android:layout_height="0dip"
+               android:layout_weight="1"
+               android:orientation="horizontal" >
+
+               <ListView
+                   android:id="@+id/lv_sensor_log"
+                   android:layout_width="0dip"
+                   android:layout_height="wrap_content"
+                   android:layout_weight="7"
+                   android:divider="#c6c6c6"
+                   >
+               </ListView>
+
+               <ListView
+                   android:id="@+id/lv_sensor_switch"
+                   android:layout_width="0dip"
+                   android:layout_height="wrap_content"
+                   android:layout_weight="3">
+
+               </ListView>
+           </LinearLayout>
+
+        </LinearLayout>
+        
+        
+        
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_MessagesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="13dp"
+            android:text="Messages"
+            android:textColor="#2cb4e6"
+            android:textSize="22sp" />
+
+        <ListView
+            android:id="@+id/lv_msgs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="#c6c6c6"
+            android:dividerHeight="2dp"
+            android:stackFromBottom="true"
+            android:transcriptMode="alwaysScroll" >
+        </ListView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_TrackingContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="13dp"
+            android:text="Tracking"
+            android:textColor="#2cb4e6"
+            android:textSize="22sp" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <FrameLayout
+                android:id="@+id/fragment_content2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/iv_invnlogo" />
+
+            <ImageView
+                android:id="@+id/iv_invnlogo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="13dp"
+                android:layout_marginTop="20dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/invensense_logo" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</LinearLayout>

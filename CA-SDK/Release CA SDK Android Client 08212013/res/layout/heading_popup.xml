@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" 
+    android:alpha="0.95"
+    android:background="@drawable/light_blue_round_rect">
+    
+ 
+	    <LinearLayout
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:orientation="horizontal" >
+               
+		<!-- First-->
+		<FrameLayout 
+		        android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <TextView 
+                         android:layout_width="wrap_content"
+                		 android:layout_height="wrap_content"
+                   		  android:id="@+id/compass_historytext"
+                   		 android:text="  "
+                   		 android:layout_marginLeft="-10dp"
+                   		  android:textColor="#000000"
+                   		   android:layout_marginTop="16dp"
+                   		   android:layout_gravity="top|center"
+                    />
+               <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="-20dp"
+                    android:scaleX="0.50"
+                    android:scaleY="0.50"
+                    android:src="@drawable/sensor_compass_bg" />
+                <ImageView
+                    android:id="@+id/compass_needle_popup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:scaleX="0.40"
+                    android:scaleY="0.40"
+                    android:layout_marginLeft="37dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/sensor_compass_needle" />
+   		</FrameLayout>    
+   		         
+        <!-- Second -->
+		<FrameLayout 
+		        android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                      <TextView 
+                         android:layout_width="wrap_content"
+                		 android:layout_height="wrap_content"
+                   		  android:id="@+id/compass_historytext1"
+                   		 android:text="  "
+                   		 android:layout_marginLeft="-10dp"
+                   		  android:textColor="#000000"
+                   		   android:layout_marginTop="16dp"
+                   		   android:layout_gravity="top|center"
+                    />
+               <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="-20dp"
+                    android:scaleX="0.50"
+                    android:scaleY="0.50"
+                    android:src="@drawable/sensor_compass_bg" />
+                <ImageView
+                    android:id="@+id/compass_needle_popup2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:scaleX="0.40"
+                    android:scaleY="0.40"
+                    android:layout_marginLeft="37dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/sensor_compass_needle" />
+   		</FrameLayout>      
+   		        
+		<!-- Third -->
+    	<FrameLayout 
+		        android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                      <TextView 
+                         android:layout_width="wrap_content"
+                		 android:layout_height="wrap_content"
+                   		  android:id="@+id/compass_historytext2"
+                   		 android:text="  "
+                   		 android:layout_marginLeft="-10dp"
+                   		  android:textColor="#000000"
+                   		   android:layout_marginTop="16dp"
+                   		   android:layout_gravity="top|center"
+                    />
+               <ImageView
+                    android:id="@+id/iv_heading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="-20dp"
+                    android:scaleX="0.50"
+                    android:scaleY="0.50"
+                    android:src="@drawable/sensor_compass_bg" />
+                <ImageView
+                    android:id="@+id/compass_needle_popup3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:scaleX="0.40"
+                    android:scaleY="0.40"
+                    android:layout_marginLeft="37dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/sensor_compass_needle" />
+   		</FrameLayout>      
+    
+    
+                
+	</LinearLayout>
+    
+    
+    
+  
+  
+  <Button
+          android:id="@+id/heading_dismiss"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:text="Dismiss" />
+  
+</LinearLayout>
