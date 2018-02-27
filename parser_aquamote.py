@@ -6,8 +6,8 @@ import sys
 # open input/output files
 
 #inputfile = open('aquamote_fullmem_20180122_220229.log', 'r') #big file 256000baud
-inputfile = open('aquamote_fullmem_20180125_001106.log', 'r') #big file 115200baud
-#inputfile = open('aquamote_fullmemt_20180122_202017.log', 'r') #small test file
+#inputfile = open('aquamote_fullmem_20180125_001106.log', 'r') #big file 115200baud
+inputfile = open('testfile_20180122_202017.log', 'r') #small test file
 outputfile = open('output.csv', 'w')
 
 # The variable "lines" is a list containing all lines
@@ -44,11 +44,10 @@ chunkCounter = 0
 currentPage = 0
 found = 0
 emptyChunks = 0
-initPage = 0
-initpage2 = 0
 concatenatedPage = ""
 concatenatedLines = 0
-zorg = 0
+runOnce = 0
+type_of_page = 0 # 0 for empty, 1 for initial values, and 2 for data page
 for line in lines:
 	if(linecounter3 > linecounter2):
 		if "END OF TRANSMISSION" in line:
@@ -61,48 +60,40 @@ for line in lines:
 			sys.exit()
 		
 		if "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" in line:
-			initPage2 = 0
+			type_of_page = 0
 			if(emptyChunks == 0):
 				tempCounter = linecounter3
 			emptyChunks += 1
-			if(emptyChunks == 16):
-				if(linecounter3 == (tempCounter + 15)):
+			if(emptyChunks == 16): 						#Check if there were 16 empty chunks (1 page)
+				if(linecounter3 == (tempCounter + 15)): #Check if the 16 chunks were consecutive
 					outputfile.write("Empty Page\n")
+				else:
+					print("The 16 empty chunks were not consecutive, possible data error")
+					inputfile.close()
+					outputfile.close()
+					sys.exit()
 				emptyChunks = 0
-				initPage = 0
+				type_of_page = 1
+				chunkCounter += 1
+				continue
 
-		if(emptyChunks == 0 and chunkCounter >= 16):
-			if(initPage == 0):
-				if(zorg == 2):
-					zorg = 1
-					initialValues = []
-					tempCounter2 = linecounter3
-					outputfile.write("Initial Values: ")
-					for x in range(0, 7): #executes 8 times
-						initialValues.append(int(line[(4*x):(4*x+3)], 16))
-					initialValues = ','.join(map(str, initialValues)) # Insert commas between values
-					outputfile.write(initialValues)
-					outputfile.write("\n")
-					initPage = 1
-					zorg = 3
-				if(zorg == 1):
-					zorg = 2
-					initPage = 0
-				if(zorg == 0):
-					initialValues = []
-					tempCounter2 = linecounter3
-					outputfile.write("Initial Values: ")
-					for x in range(0, 7): #executes 8 times
-						initialValues.append(int(line[(4*x):(4*x+3)], 16))
-					initialValues = ','.join(map(str, initialValues)) # Insert commas between values
-					outputfile.write(initialValues)
-					outputfile.write("\n")
-					zorg = 1
-					initPage = 1
+		if(type_of_page == 1):
+			if(runOnce == 0):
+				initialValues = []
+				tempCounter2 = linecounter3
+				outputfile.write("Initial Values: ")
+				for x in range(0, 7): #executes 8 times
+					initialValues.append(int(line[(4*x):(4*x+3)], 16))
+				initialValues = ','.join(map(str, initialValues)) # Insert commas between values
+				outputfile.write(initialValues)
+				outputfile.write("\n")
+				runOnce = 1
 			if(linecounter3 == (tempCounter2 + 15)):
-				initPage2 = 1
-				zorg = 3
-		if(initPage2 == 1 and emptyChunks == 0 and chunkCounter >= 32 and zorg == 3):
+				runOnce = 0
+				type_of_page = 2
+				chunkCounter += 1
+				continue
+		if(type_of_page == 2):
 			#normal page of data
 			#first, concatenate 16 chunks into one long string, then process the whole thing
 			concatenatedPage += line[0:256]
@@ -123,11 +114,6 @@ for line in lines:
 					timecount = []
 					seconds = []
 					fraction = []
-					#for x in range(0:6):
-					#	timecount.append(int(concatenatedLines[(x*292*2):(x*292*2 + 3)], 16))
-					#	seconds.append(int(concatenatedLines[(x*292*2 + 284*2):(x*292*2 + (288*2 - 1))], 16))
-					#	fraction.append(int(concatenatedLines[(x*292*2 + 288*2):(x*292*2 + (292*2 - 1))], 16))
-					
 					
 					accelValsX = []
 					gyroValsX = []
@@ -302,10 +288,6 @@ for line in lines:
 						fraction.append(int(concatenatedPage[0:7], 16))
 						outputfile.write(str(int(concatenatedPage[0:8], 16)) + ",\n")
 						concatenatedPage = concatenatedPage[8:]
-						#TODO use variables just created to update outputfile
-						#inputfile.close()
-						#outputfile.close()
-						#sys.exit()
 					#then reset for next time
 					concatenatedPage = ""
 		chunkCounter += 1
