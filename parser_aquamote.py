@@ -3,6 +3,54 @@
 # Author: Leon Kozinakov
 import sys
 
+
+def calculatePressTemp(C, D1, D2):
+	# Given C1-C6 and D1, D2, calculated TEMP and P
+	# Do conversion first and then second order temp compensation
+
+	dT = int(0)
+	SENS = int(0)
+	OFF = int(0)
+	SENSi = int(0)
+	OFFi = int(0)
+	Ti = int(0)
+	OFF2 = int(0)
+	SENS2 = int(0)
+
+	# Terms called
+	dT = D2 - C[5]*256
+
+	SENS = C[1]*32768 + (C[3]*dT)/256
+	OFF = C[2]*65536 + (C[4]*dT)/128
+	P = (D1*SENS/(2097152)-OFF)/(8192)
+
+
+	# Temp conversion
+	TEMP = 2000 + dT*C[6]/8388608
+
+	#Second order compensation
+
+	if((TEMP/100) < 20):   #Low Temp
+		Ti = (3*dT*dT)/8589934592
+		OFFi = (3*(TEMP-2000)*(TEMP-2000))/2
+		SENSi = (5*(TEMP-2000)*(TEMP-2000))/8
+		if((TEMP/100) < -15):    #Very low temp
+			OFFi = OFFi+7*(TEMP+1500)*(TEMP+1500)
+			SENSi = SENSi+4*(TEMP+1500)*(TEMP+1500)
+	else:    #High temp
+		Ti = 2*(dT*dT)/(137438953472)
+		OFFi = (1*(TEMP-2000)*(TEMP-2000))/16
+		SENSi = 0
+
+
+	OFF2 = OFF-OFFi      #Calculate pressure and temp second order
+	SENS2 = SENS-SENSi
+
+	TEMP = (TEMP-Ti)
+	P = (((D1*SENS2)/2097152-OFF2)/8192)/10
+	return TEMP, P
+
+
 # open input/output files
 
 #inputfile = open('aquamote_fullmem_20180122_220229.log', 'r') #big file 256000baud
@@ -84,8 +132,8 @@ for line in lines:
 				outputfile.write("Initial Values: ")
 				for x in range(0, 7): #executes 8 times
 					initialValues.append(int(line[(4*x):(4*x+3)], 16))
-				initialValues = ','.join(map(str, initialValues)) # Insert commas between values
-				outputfile.write(initialValues)
+				initialValues2 = ','.join(map(str, initialValues)) # Insert commas between values
+				outputfile.write(initialValues2)
 				outputfile.write("\n")
 				runOnce = 1
 			if(linecounter3 == (tempCounter2 + 15)):
@@ -152,7 +200,7 @@ for line in lines:
 								outputfile.write(concatenatedPage[0:4] + ",")
 								concatenatedPage = concatenatedPage[4:]
 								if(z <= 2):
-									outputfile.write("Null,Null,Null,Null,Null,Null,\n")
+									outputfile.write("Null,Null,Null,Null,Null,\n")
 							#M
 							magValsX.append(int(concatenatedPage[0:4], 16))
 							outputfile.write(concatenatedPage[0:4] + ",")
@@ -163,7 +211,7 @@ for line in lines:
 							magValsZ.append(int(concatenatedPage[0:4], 16))
 							outputfile.write(concatenatedPage[0:4] + ",")
 							concatenatedPage = concatenatedPage[4:]
-							outputfile.write("Null,Null,Null\n")
+							outputfile.write("Null,Null,\n")
 						for y in range(0,2):
 							#A
 							accelValsX.append(int(concatenatedPage[0:4], 16))
@@ -186,19 +234,16 @@ for line in lines:
 							outputfile.write(concatenatedPage[0:4] + ",")
 							concatenatedPage = concatenatedPage[4:]
 							if(y <= 0):
-								outputfile.write("Null,Null,Null,Null,Null,Null,\n")
+								outputfile.write("Null,Null,Null,Null,Null,\n")
 						#PT
 						outputfile.write("Null,Null,Null,")
-						pressTempVals.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						pressTempVals.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						pressTempVals.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						outputfile.write("\n")
+						pressTempVals.append(int(concatenatedPage[0:6], 16))
+						pressureValue = int(concatenatedPage[0:6], 16)
+						concatenatedPage = concatenatedPage[6:]
+						pressTempVals.append(int(concatenatedPage[0:6], 16))
+						the_temp, the_pressure = calculatePressTemp(initialValues, pressureValue, int(concatenatedPage[0:6], 16))
+						concatenatedPage = concatenatedPage[6:]
+						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",\n")
 						#TODO implement
 						for y in range(0,2):
 							#A
@@ -222,7 +267,7 @@ for line in lines:
 							outputfile.write(concatenatedPage[0:4] + ",")
 							concatenatedPage = concatenatedPage[4:]
 							if(y <= 0):
-								outputfile.write("Null,Null,Null,Null,Null,Null,\n")
+								outputfile.write("Null,Null,Null,Null,Null,\n")
 						#M
 						magValsX.append(int(concatenatedPage[0:4], 16))
 						outputfile.write(concatenatedPage[0:4] + ",")
@@ -233,7 +278,7 @@ for line in lines:
 						magValsZ.append(int(concatenatedPage[0:4], 16))
 						outputfile.write(concatenatedPage[0:4] + ",")
 						concatenatedPage = concatenatedPage[4:]
-						outputfile.write("Null,Null,Null\n")
+						outputfile.write("Null,Null,\n")
 						for y in range(0,2):
 							for z in range(0,4):
 								#A
@@ -257,7 +302,7 @@ for line in lines:
 								outputfile.write(concatenatedPage[0:4] + ",")
 								concatenatedPage = concatenatedPage[4:]
 								if(z <= 2):
-									outputfile.write("Null,Null,Null,Null,Null,Null,\n")
+									outputfile.write("Null,Null,Null,Null,Null,\n")
 							#M
 							magValsX.append(int(concatenatedPage[0:4], 16))
 							outputfile.write(concatenatedPage[0:4] + ",")
@@ -269,25 +314,25 @@ for line in lines:
 							outputfile.write(concatenatedPage[0:4] + ",")
 							concatenatedPage = concatenatedPage[4:]
 							if(y <= 0):
-								outputfile.write("Null,Null,Null\n")
+								outputfile.write("Null,Null,\n")
 						#PT
-						pressTempVals.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						pressTempVals.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						pressTempVals.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
+						pressTempVals.append(int(concatenatedPage[0:6], 16))
+						pressureValue = int(concatenatedPage[0:6], 16)
+						concatenatedPage = concatenatedPage[6:]
+						pressTempVals.append(int(concatenatedPage[0:6], 16))
+						the_temp, the_pressure = calculatePressTemp(initialValues, pressureValue, int(concatenatedPage[0:6], 16))
+						concatenatedPage = concatenatedPage[6:]
+						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",")
+						
 						#seconds
-						seconds.append(int(concatenatedPage[0:7], 16))
-						outputfile.write(str(int(concatenatedPage[0:8], 16)) + ",")
+						seconds.append(int(concatenatedPage[0:8], 16))
+						the_seconds = float(int(concatenatedPage[0:8], 16))
 						concatenatedPage = concatenatedPage[8:]
 						#fraction
-						fraction.append(int(concatenatedPage[0:7], 16))
-						outputfile.write(str(int(concatenatedPage[0:8], 16)) + ",\n")
+						fraction.append(int(concatenatedPage[0:8], 16))
+						decimal_time = the_seconds + float(int(concatenatedPage[0:8], 16)) / (4294967295)
 						concatenatedPage = concatenatedPage[8:]
+						outputfile.write(str(decimal_time) + ",\n")
 					#then reset for next time
 					concatenatedPage = ""
 		chunkCounter += 1
