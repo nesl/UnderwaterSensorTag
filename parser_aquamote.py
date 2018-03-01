@@ -20,34 +20,34 @@ def calculatePressTemp(C, D1, D2):
 	# Terms called
 	dT = D2 - C[5]*256
 
-	SENS = C[1]*32768 + (C[3]*dT)/256
-	OFF = C[2]*65536 + (C[4]*dT)/128
-	P = (D1*SENS/(2097152)-OFF)/(8192)
+	SENS = int(C[1]*32768 + (C[3]*dT)/256)
+	OFF = int(C[2]*65536 + (C[4]*dT)/128)
+	P = int((D1*SENS/(2097152)-OFF)/(8192))
 
 
 	# Temp conversion
-	TEMP = 2000 + dT*C[6]/8388608
+	TEMP = int(2000 + dT*C[6]/8388608)
 
 	#Second order compensation
 
 	if((TEMP/100) < 20):   #Low Temp
-		Ti = (3*dT*dT)/8589934592
-		OFFi = (3*(TEMP-2000)*(TEMP-2000))/2
-		SENSi = (5*(TEMP-2000)*(TEMP-2000))/8
+		Ti = int((3*dT*dT)/8589934592)
+		OFFi = int((3*(TEMP-2000)*(TEMP-2000))/2)
+		SENSi = int((5*(TEMP-2000)*(TEMP-2000))/8)
 		if((TEMP/100) < -15):    #Very low temp
-			OFFi = OFFi+7*(TEMP+1500)*(TEMP+1500)
-			SENSi = SENSi+4*(TEMP+1500)*(TEMP+1500)
+			OFFi = int(OFFi+7*(TEMP+1500)*(TEMP+1500))
+			SENSi = int(SENSi+4*(TEMP+1500)*(TEMP+1500))
 	else:    #High temp
-		Ti = 2*(dT*dT)/(137438953472)
-		OFFi = (1*(TEMP-2000)*(TEMP-2000))/16
+		Ti = int(2*(dT*dT)/(137438953472))
+		OFFi = int((1*(TEMP-2000)*(TEMP-2000))/16)
 		SENSi = 0
 
 
 	OFF2 = OFF-OFFi      #Calculate pressure and temp second order
 	SENS2 = SENS-SENSi
 
-	TEMP = (TEMP-Ti)
-	P = (((D1*SENS2)/2097152-OFF2)/8192)/10
+	TEMP = (TEMP-Ti)/100
+	P = int(((D1*SENS2)/2097152-OFF2)/8192)/10
 	return TEMP, P
 
 
@@ -55,7 +55,11 @@ def calculatePressTemp(C, D1, D2):
 
 #inputfile = open('aquamote_fullmem_20180122_220229.log', 'r') #big file 256000baud
 #inputfile = open('aquamote_fullmem_20180125_001106.log', 'r') #big file 115200baud
-inputfile = open('testfile_20180122_202017.log', 'r') #small test file
+#inputfile = open('testfile_20180122_202017.log', 'r') #small test file
+#inputfile = open('valencia_aquamote0_molluscs_dolphin_turtle_20180227_181958.log', 'r')
+#inputfile = open('valencia_aquamote4_nurseshark_seaturtle_20180227_183931.log', 'r')
+#inputfile = open('imu_testdata_20180228_204118.log', 'r')
+inputfile = open('imu_testdata_sensitivity_20180228_212742.log', 'r')
 outputfile = open('output.csv', 'w')
 
 # The variable "lines" is a list containing all lines
@@ -95,7 +99,16 @@ emptyChunks = 0
 concatenatedPage = ""
 concatenatedLines = 0
 runOnce = 0
+initialValuesRead = 0
 type_of_page = 0 # 0 for empty, 1 for initial values, and 2 for data page
+
+#Sensitivity divisor for accelerometer
+
+#sensitivity_accel = 16384 # +/- 2g
+#sensitivity_accel = 8192  # +/- 4g
+#sensitivity_accel = 4096  # +/- 8g
+sensitivity_accel = 2048  # +/- 16g
+
 for line in lines:
 	if(linecounter3 > linecounter2):
 		if "END OF TRANSMISSION" in line:
@@ -121,17 +134,21 @@ for line in lines:
 					outputfile.close()
 					sys.exit()
 				emptyChunks = 0
-				type_of_page = 1
+				if(initialValuesRead == 0):
+					type_of_page = 1
+				else:
+					type_of_page = 2
 				chunkCounter += 1
 				continue
 
 		if(type_of_page == 1):
+			initialValuesRead = 1
 			if(runOnce == 0):
 				initialValues = []
 				tempCounter2 = linecounter3
 				outputfile.write("Initial Values: ")
 				for x in range(0, 7): #executes 8 times
-					initialValues.append(int(line[(4*x):(4*x+3)], 16))
+					initialValues.append(int(line[(4*x):(4*x+4)], 16))
 				initialValues2 = ','.join(map(str, initialValues)) # Insert commas between values
 				outputfile.write(initialValues2)
 				outputfile.write("\n")
@@ -160,8 +177,6 @@ for line in lines:
 					outputfile.write("Bad Page: Missing ending string\n")
 				else:
 					timecount = []
-					seconds = []
-					fraction = []
 					
 					accelValsX = []
 					gyroValsX = []
@@ -172,7 +187,6 @@ for line in lines:
 					accelValsZ = []
 					gyroValsZ = []
 					magValsZ = []
-					pressTempVals = []
 
 					for x in range(0,7):
 						timecount.append(int(concatenatedPage[0:4], 16))
@@ -237,14 +251,11 @@ for line in lines:
 								outputfile.write("Null,Null,Null,Null,Null,\n")
 						#PT
 						outputfile.write("Null,Null,Null,")
-						pressTempVals.append(int(concatenatedPage[0:6], 16))
-						pressureValue = int(concatenatedPage[0:6], 16)
-						concatenatedPage = concatenatedPage[6:]
-						pressTempVals.append(int(concatenatedPage[0:6], 16))
-						the_temp, the_pressure = calculatePressTemp(initialValues, pressureValue, int(concatenatedPage[0:6], 16))
-						concatenatedPage = concatenatedPage[6:]
+						pressureValue = int((concatenatedPage[2:4] + concatenatedPage[0:2] + concatenatedPage[6:8]), 16)
+						temperatureValue = int((concatenatedPage[4:6] + concatenatedPage[10:12] + concatenatedPage[8:10]), 16)
+						the_temp, the_pressure = calculatePressTemp(initialValues, pressureValue, temperatureValue)
+						concatenatedPage = concatenatedPage[12:]
 						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",\n")
-						#TODO implement
 						for y in range(0,2):
 							#A
 							accelValsX.append(int(concatenatedPage[0:4], 16))
@@ -315,21 +326,17 @@ for line in lines:
 							concatenatedPage = concatenatedPage[4:]
 							if(y <= 0):
 								outputfile.write("Null,Null,\n")
-						#PT
-						pressTempVals.append(int(concatenatedPage[0:6], 16))
-						pressureValue = int(concatenatedPage[0:6], 16)
-						concatenatedPage = concatenatedPage[6:]
-						pressTempVals.append(int(concatenatedPage[0:6], 16))
-						the_temp, the_pressure = calculatePressTemp(initialValues, pressureValue, int(concatenatedPage[0:6], 16))
-						concatenatedPage = concatenatedPage[6:]
-						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",")
+						#PT						
+						pressureValue = int((concatenatedPage[2:4] + concatenatedPage[0:2] + concatenatedPage[6:8]), 16)
+						temperatureValue = int((concatenatedPage[4:6] + concatenatedPage[10:12] + concatenatedPage[8:10]), 16)
+						the_temp, the_pressure = calculatePressTemp(initialValues, pressureValue, temperatureValue)
+						concatenatedPage = concatenatedPage[12:]
+						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",")			
 						
 						#seconds
-						seconds.append(int(concatenatedPage[0:8], 16))
 						the_seconds = float(int(concatenatedPage[0:8], 16))
 						concatenatedPage = concatenatedPage[8:]
 						#fraction
-						fraction.append(int(concatenatedPage[0:8], 16))
 						decimal_time = the_seconds + float(int(concatenatedPage[0:8], 16)) / (4294967295)
 						concatenatedPage = concatenatedPage[8:]
 						outputfile.write(str(decimal_time) + ",\n")
