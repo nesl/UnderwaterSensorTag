@@ -2,7 +2,7 @@
 
 # Author: Leon Kozinakov
 import sys
-
+import struct
 
 def calculatePressTemp(C, D1, D2):
 	# Given C1-C6 and D1, D2, calculated TEMP and P
@@ -49,6 +49,12 @@ def calculatePressTemp(C, D1, D2):
 	TEMP = (TEMP-Ti)/100
 	P = int(((D1*SENS2)/2097152-OFF2)/8192)/10
 	return TEMP, P
+
+def outputAcceleration(rawdata):
+	a_x = struct.unpack('<h', bytes.fromhex(rawdata[0:4]))[0] / sensitivity_accel
+	a_y = struct.unpack('<h', bytes.fromhex(rawdata[4:8]))[0] / sensitivity_accel
+	a_z = struct.unpack('<h', bytes.fromhex(rawdata[8:12]))[0] / sensitivity_accel
+	outputfile.write(str(a_x) + "," + str(a_y) + "," + str(a_z) + ",")
 
 
 # open input/output files
@@ -194,15 +200,8 @@ for line in lines:
 						for y in range(0,2):
 							for z in range(0,4):
 								#A
-								accelValsX.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								accelValsY.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								accelValsZ.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
+								outputAcceleration(concatenatedPage[0:12])
+								concatenatedPage = concatenatedPage[12:]
 								#G
 								gyroValsX.append(int(concatenatedPage[0:4], 16))
 								outputfile.write(concatenatedPage[0:4] + ",")
@@ -228,15 +227,8 @@ for line in lines:
 							outputfile.write("Null,Null,\n")
 						for y in range(0,2):
 							#A
-							accelValsX.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							accelValsY.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							accelValsZ.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
+							outputAcceleration(concatenatedPage[0:12])
+							concatenatedPage = concatenatedPage[12:]
 							#G
 							gyroValsX.append(int(concatenatedPage[0:4], 16))
 							outputfile.write(concatenatedPage[0:4] + ",")
@@ -258,15 +250,8 @@ for line in lines:
 						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",\n")
 						for y in range(0,2):
 							#A
-							accelValsX.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							accelValsY.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							accelValsZ.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
+							outputAcceleration(concatenatedPage[0:12])
+							concatenatedPage = concatenatedPage[12:]
 							#G
 							gyroValsX.append(int(concatenatedPage[0:4], 16))
 							outputfile.write(concatenatedPage[0:4] + ",")
@@ -293,15 +278,8 @@ for line in lines:
 						for y in range(0,2):
 							for z in range(0,4):
 								#A
-								accelValsX.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								accelValsY.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								accelValsZ.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
+								outputAcceleration(concatenatedPage[0:12])
+								concatenatedPage = concatenatedPage[12:]
 								#G
 								gyroValsX.append(int(concatenatedPage[0:4], 16))
 								outputfile.write(concatenatedPage[0:4] + ",")
