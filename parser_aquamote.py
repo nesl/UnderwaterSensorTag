@@ -50,22 +50,27 @@ def calculatePressTemp(C, D1, D2):
 	P = int(((D1*SENS2)/2097152-OFF2)/8192)/10
 	return TEMP, P
 
-def outputAcceleration(rawdata):
-	a_x = struct.unpack('<h', bytes.fromhex(rawdata[0:4]))[0] / sensitivity_accel
-	a_y = struct.unpack('<h', bytes.fromhex(rawdata[4:8]))[0] / sensitivity_accel
-	a_z = struct.unpack('<h', bytes.fromhex(rawdata[8:12]))[0] / sensitivity_accel
-	outputfile.write(str(a_x) + "," + str(a_y) + "," + str(a_z) + ",")
+def outputIMU(rawdata, divisor):
+	x = struct.unpack('<h', bytes.fromhex(rawdata[0:4]))[0] / divisor
+	y = struct.unpack('<h', bytes.fromhex(rawdata[4:8]))[0] / divisor
+	z = struct.unpack('<h', bytes.fromhex(rawdata[8:12]))[0] / divisor
+	outputfile.write(str(x) + "," + str(y) + "," + str(z) + ",")
+def outputMagnetometer(rawdata, multiplier):
+	x = struct.unpack('<h', bytes.fromhex(rawdata[0:4]))[0] * multiplier
+	y = struct.unpack('<h', bytes.fromhex(rawdata[4:8]))[0] * multiplier
+	z = struct.unpack('<h', bytes.fromhex(rawdata[8:12]))[0] * multiplier
+	outputfile.write(str(x) + "," + str(y) + "," + str(z) + ",")
 
 
 # open input/output files
 
-#inputfile = open('aquamote_fullmem_20180122_220229.log', 'r') #big file 256000baud
-#inputfile = open('aquamote_fullmem_20180125_001106.log', 'r') #big file 115200baud
-#inputfile = open('testfile_20180122_202017.log', 'r') #small test file
-#inputfile = open('valencia_aquamote0_molluscs_dolphin_turtle_20180227_181958.log', 'r')
-#inputfile = open('valencia_aquamote4_nurseshark_seaturtle_20180227_183931.log', 'r')
-#inputfile = open('imu_testdata_20180228_204118.log', 'r')
-inputfile = open('imu_testdata_sensitivity_20180228_212742.log', 'r')
+#inputfile = open('logs/aquamote_fullmem_20180122_220229.log', 'r') #big file 256000baud
+#inputfile = open('logs/aquamote_fullmem_20180125_001106.log', 'r') #big file 115200baud
+#inputfile = open('logs/testfile_20180122_202017.log', 'r') #small test file
+#inputfile = open('logs/valencia_aquamote0_molluscs_dolphin_turtle_20180227_181958.log', 'r')
+#inputfile = open('logs/valencia_aquamote4_nurseshark_seaturtle_20180227_183931.log', 'r')
+#inputfile = open('logs/imu_testdata_20180228_204118.log', 'r')
+inputfile = open('logs/imu_test_mag_added_20180301_220514.log', 'r')
 outputfile = open('output.csv', 'w')
 
 # The variable "lines" is a list containing all lines
@@ -114,6 +119,13 @@ type_of_page = 0 # 0 for empty, 1 for initial values, and 2 for data page
 #sensitivity_accel = 8192  # +/- 4g
 #sensitivity_accel = 4096  # +/- 8g
 sensitivity_accel = 2048  # +/- 16g
+
+sensitivity_gyro = 131  # +/- 250 degrees/s
+#sensitivity_gyro = 65.5  # +/- 500 degrees/s
+#sensitivity_gyro = 32.8  # +/- 1000 degrees/s
+#sensitivity_gyro = 16.4  # +/- 2000 degrees/s
+
+sensitivity_mag = 0.15  # +/- 4900 uT
 
 for line in lines:
 	if(linecounter3 > linecounter2):
@@ -200,45 +212,24 @@ for line in lines:
 						for y in range(0,2):
 							for z in range(0,4):
 								#A
-								outputAcceleration(concatenatedPage[0:12])
+								outputIMU(concatenatedPage[0:12], sensitivity_accel)
 								concatenatedPage = concatenatedPage[12:]
 								#G
-								gyroValsX.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								gyroValsY.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								gyroValsZ.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
+								outputIMU(concatenatedPage[0:12], sensitivity_gyro)
+								concatenatedPage = concatenatedPage[12:]
 								if(z <= 2):
 									outputfile.write("Null,Null,Null,Null,Null,\n")
 							#M
-							magValsX.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							magValsY.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							magValsZ.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
+							outputMagnetometer(concatenatedPage[0:12], sensitivity_mag)
+							concatenatedPage = concatenatedPage[12:]
 							outputfile.write("Null,Null,\n")
 						for y in range(0,2):
 							#A
-							outputAcceleration(concatenatedPage[0:12])
+							outputIMU(concatenatedPage[0:12], sensitivity_accel)
 							concatenatedPage = concatenatedPage[12:]
 							#G
-							gyroValsX.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							gyroValsY.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							gyroValsZ.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
+							outputIMU(concatenatedPage[0:12], sensitivity_gyro)
+							concatenatedPage = concatenatedPage[12:]
 							if(y <= 0):
 								outputfile.write("Null,Null,Null,Null,Null,\n")
 						#PT
@@ -250,58 +241,30 @@ for line in lines:
 						outputfile.write(str(the_pressure) + "," + str(the_temp) + ",\n")
 						for y in range(0,2):
 							#A
-							outputAcceleration(concatenatedPage[0:12])
+							outputIMU(concatenatedPage[0:12], sensitivity_accel)
 							concatenatedPage = concatenatedPage[12:]
 							#G
-							gyroValsX.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							gyroValsY.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							gyroValsZ.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
+							outputIMU(concatenatedPage[0:12], sensitivity_gyro)
+							concatenatedPage = concatenatedPage[12:]
 							if(y <= 0):
 								outputfile.write("Null,Null,Null,Null,Null,\n")
 						#M
-						magValsX.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						magValsY.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
-						magValsZ.append(int(concatenatedPage[0:4], 16))
-						outputfile.write(concatenatedPage[0:4] + ",")
-						concatenatedPage = concatenatedPage[4:]
+						outputMagnetometer(concatenatedPage[0:12], sensitivity_mag)
+						concatenatedPage = concatenatedPage[12:]
 						outputfile.write("Null,Null,\n")
 						for y in range(0,2):
 							for z in range(0,4):
 								#A
-								outputAcceleration(concatenatedPage[0:12])
+								outputIMU(concatenatedPage[0:12], sensitivity_accel)
 								concatenatedPage = concatenatedPage[12:]
 								#G
-								gyroValsX.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								gyroValsY.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
-								gyroValsZ.append(int(concatenatedPage[0:4], 16))
-								outputfile.write(concatenatedPage[0:4] + ",")
-								concatenatedPage = concatenatedPage[4:]
+								outputIMU(concatenatedPage[0:12], sensitivity_gyro)
+								concatenatedPage = concatenatedPage[12:]
 								if(z <= 2):
 									outputfile.write("Null,Null,Null,Null,Null,\n")
 							#M
-							magValsX.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							magValsY.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
-							magValsZ.append(int(concatenatedPage[0:4], 16))
-							outputfile.write(concatenatedPage[0:4] + ",")
-							concatenatedPage = concatenatedPage[4:]
+							outputMagnetometer(concatenatedPage[0:12], sensitivity_mag)
+							concatenatedPage = concatenatedPage[12:]
 							if(y <= 0):
 								outputfile.write("Null,Null,\n")
 						#PT						
