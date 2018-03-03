@@ -63,15 +63,10 @@ def outputMagnetometer(rawdata, multiplier):
 
 
 # open input/output files
-
-#inputfile = open('logs/aquamote_fullmem_20180122_220229.log', 'r') #big file 256000baud
-#inputfile = open('logs/aquamote_fullmem_20180125_001106.log', 'r') #big file 115200baud
-#inputfile = open('logs/testfile_20180122_202017.log', 'r') #small test file
-#inputfile = open('logs/valencia_aquamote0_molluscs_dolphin_turtle_20180227_181958.log', 'r')
-#inputfile = open('logs/valencia_aquamote4_nurseshark_seaturtle_20180227_183931.log', 'r')
-#inputfile = open('logs/imu_testdata_20180228_204118.log', 'r')
-inputfile = open('logs/imu_test_mag_added_20180301_220514.log', 'r')
-outputfile = open('output.csv', 'w')
+outputfilename = sys.argv[1]
+outputfilename = outputfilename[:-3] + "csv"
+inputfile = open(sys.argv[1], 'r')
+outputfile = open(outputfilename, 'w')
 
 # The variable "lines" is a list containing all lines
 lines = inputfile.readlines()
