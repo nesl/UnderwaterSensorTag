@@ -1,0 +1,22 @@
+[0614/014823:ERROR:tcp_socket_win.cc(335)] bind() returned an error: Only one usage of each socket address (protocol/network address/port) is normally permitted. (0x2740)
+[0614/014823:ERROR:devtools_http_handler.cc(229)] Cannot start http server for devtools. Stop devtools.
+[0614/014826:ERROR:cache_util_win.cc(20)] Unable to move the cache: 5
+[0614/014826:ERROR:cache_util.cc(134)] Unable to move cache folder C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\BrowserCache\GPUCache to C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\BrowserCache\old_GPUCache_000
+[0614/014826:ERROR:cache_creator.cc(129)] Unable to create cache
+[0614/014826:ERROR:shader_disk_cache.cc(589)] Shader Cache Creation failed: -2
+[0614/014826:ERROR:cache_util_win.cc(20)] Unable to move the cache: 5
+[0614/014826:ERROR:cache_util.cc(134)] Unable to move cache folder C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\BrowserCache to C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\old_BrowserCache_000
+[0614/014826:ERROR:cache_creator.cc(129)] Unable to create cache
+[0712/001004:ERROR:browser_gpu_channel_host_factory.cc(119)] Failed to launch GPU process.
+[0827/214742:ERROR:tcp_socket_win.cc(335)] bind() returned an error: Only one usage of each socket address (protocol/network address/port) is normally permitted. (0x2740)
+[0827/214742:ERROR:devtools_http_handler.cc(229)] Cannot start http server for devtools. Stop devtools.
+[0827/214745:ERROR:cache_util_win.cc(20)] Unable to move the cache: 5
+[0827/214745:ERROR:cache_util.cc(134)] Unable to move cache folder C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\BrowserCache\GPUCache to C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\BrowserCache\old_GPUCache_000
+[0827/214745:ERROR:cache_creator.cc(129)] Unable to create cache
+[0827/214745:ERROR:shader_disk_cache.cc(589)] Shader Cache Creation failed: -2
+[0827/214745:ERROR:cache_util_win.cc(20)] Unable to move the cache: 5
+[0827/214745:ERROR:cache_util.cc(134)] Unable to move cache folder C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\BrowserCache to C:\ProgramData\Altium\Altium Designer {3633DBA6-0C20-4739-B87D-CD85E3F6968B}\old_BrowserCache_000
+[0827/214745:ERROR:cache_creator.cc(129)] Unable to create cache
+[0827/233219:ERROR:browser_gpu_channel_host_factory.cc(119)] Failed to launch GPU process.
+[0828/204945:ERROR:gles2_cmd_decoder.cc(13997)] [.CommandBufferContext.RenderWorker-00918240]GL ERROR :GL_INVALID_VALUE : glCopySubTextureCHROMIUM: source texture has no level 0
+[0828/204945:ERROR:gles2_cmd_decoder.cc(13997)] [.CommandBufferContext.RenderWorker-00918240]GL ERROR :GL_INVALID_VALUE : glCopySubTextureCHROMIUM: source texture has no level 0
