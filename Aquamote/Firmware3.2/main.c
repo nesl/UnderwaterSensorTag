@@ -50,6 +50,8 @@
 #include <ti/drivers/Power.h>
 #include <ti/drivers/power/PowerCC26XX.h>
 #include <ti/sysbios/BIOS.h>
+#include <ti/drivers/SPI.h>
+
 
 #include "icall.h"
 #include "hal_assert.h"
@@ -57,6 +59,7 @@
 #include "peripheral.h"
 #include "spp_ble_server.h"
 #include "inc/sdi_task.h" 
+
 
 /* Header files required to enable instruction fetch cache */
 #include <inc/hw_memmap.h>
@@ -141,6 +144,8 @@ int main()
   RegisterAssertCback(AssertHandler);
 
   PIN_init(BoardGpioInitTable);
+  Board_initSPI();
+  Board_initUART();
 
 #ifdef CC1350_LAUNCHXL
   // Enable 2.4GHz Radio
