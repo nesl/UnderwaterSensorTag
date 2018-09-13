@@ -23,8 +23,8 @@ from quaternion import Quaternion
 
 
 class MadgwickAHRS:
-    samplePeriod = 1/256
-    quaternion = Quaternion(1, 0, 0, 0)
+    samplePeriod = 0.01
+    quaternion = Quaternion(1, 0.1, 0.1, 0.1)
     beta = 0.1
 
     def __init__(self, sampleperiod=None, quaternion=None, beta=None):
