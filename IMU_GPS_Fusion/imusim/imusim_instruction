@@ -1,0 +1,68 @@
+<Installation on Linux>
+anaconda 2.7
+use command line in imusim isntallation.rst 
+cpython from imusim installation stack 
+python instll setup.py form imusim installation stack 
+
+
+
+<To Start> 
+ipython --matplotlib
+
+from imusim.all import *  // Import everything 
+
+sim = Simulation()
+
+trajectory = RandomTrajectory()	// Create a random Trajectory
+
+imu = IdealIMU(sim, trajectory) // Create a simulated IMU
+
+//Define the behaviour of IMU
+sampleingPeriod = 0.01 
+behaviour = BasicIMUBehaviour(imu, samplingPeriod) 
+
+//Set the start time 
+sim.time = trajectory.startTime
+
+//Run simulation 
+sim.run(trajectory.endTime)
+
+
+
+
+imu.accelerometer.rawMeasurements.timestamps 
+imu.accelerometer.rawMeasurements.values 
+
+
+<Trajectory>
+
+t = trajectory.startTime 
+trajectory.position(t)
+trajectory.velocity(t) 
+trajectory.acceleration(t)
+
+trajectory.rotation(t)
+trajectory.rotationalVelocity(t)
+trajectory.rotationalAcceleration(t)
+trajectory.endTime
+
+
+
+<Environment>
+
+sim.environment
+sim.environment.magneticField
+sim.environment.gravitationalField
+sim.environment.radioEnvironment
+
+
+
+
+
+
+
+
+
+
+
+
