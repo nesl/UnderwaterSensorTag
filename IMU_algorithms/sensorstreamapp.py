@@ -6,6 +6,8 @@
 
 # https://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[],%20float[],%20float[],%20float[])
 # https://github.com/memsindustrygroup/Open-Source-Sensor-Fusion/wiki/simple_algorithms
+# https://github.com/matthew-brett/transforms3d/blob/master/original/transformations.py
+# https://afni.nimh.nih.gov/pub/dist/src/pkundu/meica.libs/nibabel/quaternions.py
 
 
 import socket, traceback
@@ -17,10 +19,12 @@ from ponycube import *
 from madgwickahrs import *
 import quaternion
 from quaternion import QuaternionClass
-from a3 import IntegrationRK4, AccMagOrientation, headingfromMag, QuatToEuler
+from a3 import quatNormalized, IntegrationRK4, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
 from math import atan2, atan
+from numpy.linalg import inv
+from numpy import linalg as LA
 
-
+algorithm = "MUSE"    #A3, MUSE, Madgwick
 
 host = ''
 port = 5555
@@ -49,6 +53,10 @@ Sc = []
 Sg = []
 C = []
 G = []
+Eg = 0
+
+initial = 0
+update = 0
 
 while 1:
     message, address = s.recvfrom(8192)
@@ -81,60 +89,287 @@ while 1:
         # print(gyro)
 
 
-        # # A3 Algorithm - gyroscope calibration
-        # omega1 = [gx, gy, gz]
-        # dt = time_diff
-        # quatG = IntegrationRK4(omega0, omega1, quat, dt)
-        # yawG, pitchG, rollG = QuatToEuler(quatG)
-        # omega0 = omega1
 
-        # # A3 Algorithm - accelerometer, magnetometer calibration
-        # yawAM, pitchAM, rollAM, quatAM = AccMagOrientation(accel, mag)
-    
-        
+############################ MUSE #####################################################
+        if algorithm == "MUSE":
+            # # Initial yaw, pitch, roll from Accelerometer and Magnetometer 
+            yawAM, pitchAM, rollAM, quatAM = AccMagOrientation(accel, mag)
+            omega1 = [gx, gy, gz]
+            dt = time_diff
+            quatG = IntegrationRK4(omega0, omega1, quat, dt)
+            yawG, pitchG, rollG = QuatToEuler(quatG)
 
-        # headingM = headingfromMag(mag)
+            omega0 = omega1
 
-        # if similaritywindow > 2:
-        #     # calculate pc and pg 
-        #     pc = 1/(2**np.var(np.subtract(Sc,C)))
-        #     pg = 1/(2**np.var(np.subtract(Sg,G)))
-            
-        #     # E1 = -32.14*pc + 19.93
-        #     # E2 = -12.86*pg + 11.57
+            w = max(gyro)*180/math.pi
+            a = max(accel)
 
-        #     # Ec = max(E1, E2)
+            if w < 240 and a < 2*9.8:
 
-        #     if pc > 0.2 and pg > 0.2: 
-        #         quat = quatAM
-        #         print("change!")
-        #     else:
-        #         quat = quatG
-        #     # reset values
-        #     similaritywindow = 0 
-        #     C = []
-        #     Sc = []
-        #     Sg = []
-        #     G = []
-        # else:
-        #     C.append(headingM)
-        #     Sc.append(yawG)
-        #     Sg.append(rollG)
-        #     G.append(rollAM)
-        #     similaritywindow = similaritywindow + time_diff
-        #     quat = quatG
+                headingM = headingfromMag(mag)
 
+                if initial < 50:
+                    quat = quatAM
+                    print("initial")
+                    # O: orientation rotMat from quat 
+                    # O-1 : inverse of the rot Mat 
+                    # Calculate Ng = O*NL- Equation (1)
+                    N_L = np.mat([[mx],[my],[mz]])
+                    print("N_L")
+                    print(N_L)
+                    O = QuatToRotMat(quatAM)
+                    N_G = O*N_L
+                    # print("N_G")
+                    # print(N_G)
+                    initial = initial + 1
+
+                    O_hat = QuatToRotMat(quatG)  
+                    Oinv_hat = inv(O_hat)
+                    N_L_hat = Oinv_hat * N_G  
+                    print("N_L_hat")  
+                    print(N_L_hat)                
+     
+
+
+                else:
+
+                    Eg = Eg + 0.0003*w*time_diff + 0.001*a*time_diff
+
+                    if similaritywindow > 2:
+                        # calculate pc and pg 
+                        pc = 1/(2**np.var(np.subtract(Sc,C)))
+                        pg = 1/(2**np.var(np.subtract(Sg,G)))
+
+                        if pc > 0.2 and pg > 0.2: 
+                            print("change?")
+
+
+
+                        E1 = -32.14*pc + 19.93
+                        E2 = -12.86*pg + 11.57
+                        Ec = max(E1, E2)
+                        Eg = Eg*1000
+
+                        print(Ec)
+                        print(Eg)
+                        if Ec < Eg*1000: 
+
+                            print("yes, update quat with AM")
+                            quat = quatAM
+                            update = 1
+
+                                                # reset values
+                        similaritywindow = 0 
+                        C = []
+                        Sc = []
+                        Sg = []
+                        G = []
+                        Eg = 0 
+
+
+                    else:
+                        C.append(headingM)
+                        Sc.append(yawG)
+                        Sg.append(rollG)
+                        G.append(rollAM)
+                        similaritywindow = similaritywindow + time_diff
+                        
+                    if update == 0:
+
+                        O_hat = QuatToRotMat(quatG)  
+                        Oinv_hat = inv(O_hat)
+                        N_L_hat = Oinv_hat * N_G  
+                        # print("N_L_hat")  
+                        # print(N_L_hat)   
+
+                        N_L = np.mat([[mx],[my],[mz]])
+                        # print("N_L")
+                        # print(N_L)
+
+                        N_L_hat = np.array([np.array(N_L_hat)[0][0], np.array(N_L_hat)[1][0], np.array(N_L_hat)[2][0]])
+                        N_L = np.array([mx, my, mz])
+                        RotAxis = np.cross(N_L_hat, N_L)
+                        RotAxis = RotAxis/LA.norm(RotAxis)
+                        # print("RotAxis")
+                        # print(RotAxis/LA.norm(RotAxis))
+                        
+                        alpha = 0.01
+                        RotAngle = angle_between(N_L_hat, N_L)
+                        alphaRotAngle = alpha* RotAngle
+                        deltaRotMat = AxisAngleToRotMat(RotAxis, alphaRotAngle)
+                        Onew_hat = np.array(np.mat(inv(deltaRotMat))*np.mat(O_hat))
+                        quatMUSE = RotMatToQuat(Onew_hat)
+                        quatMUSE = quatNormalized(quatMUSE)
+                        quat = QuaternionClass(quatMUSE[0], quatMUSE[1], quatMUSE[2], quatMUSE[3])                
+
+                        print("update quat with MUSE")
+
+                    update = 0
+
+
+                
+                # if False: # Acceleration roughly measures 9.8 m/s2
+                #     print("false")
+                # else:
+                #     print("MUSE")
+                #     #muse update 
+                #     # Inferred NL - equation (3)
+                #     O_hat = QuatToRotMat(quatG)
+                #     print("O_hat")
+                #     print(O_hat)
+                #     Oinv_hat = inv(O_hat)
+
+                #     N_L_hat = Oinv_hat * N_G
+                #     print("N_L_hat")
+                #     N_L_hat = np.array([np.array(N_L_hat)[0][0], np.array(N_L_hat)[1][0], np.array(N_L_hat)[2][0]])
+                #     print(N_L_hat)
+                #     N_L = np.array([mx,my,mz])
+                #     print("N_L")
+                #     print(N_L)
+
+                #     # # Rotation Axis 
+                #     RotAxis = np.cross(N_L_hat, N_L)
+
+
+                #     # # Rotation Angle 
+                #     RotAngle = angle_between(N_L_hat, N_L)
+                #     print("rotation angle")
+                #     print(RotAngle)
+                #     # alpha = 0.01
+                #     # alphaRotAngle = alpha* RotAngle
+
+                #     # # delta Rotation Matrix - Equation (4)
+                #     # deltaRotMat = AxisAngleToRotMat(RotAxis, alphaRotAngle)
+
+                #     # # Updated orientation - Equation (5)
+                #     # Onew_hat = np.array(inv(deltaRotMat)*O_hat)
+                #     # print("Onew_hat")
+                #     # print(Onew_hat)
+                #     # print("quatMUSE")
+
+                #     # quatMUSE = RotMatToQuat(O_hat)
+                #     # print(quatMUSE)
+                #     # print(quatMUSE[0])
+                #     # print(quatMUSE[1])
+                #     # print(quatMUSE[2])
+                #     # print(quatMUSE[3])
+
+                    
+                #     #quat = quat + QuaternionClass(quatMUSE[0], quatMUSE[1], quatMUSE[2], quatMUSE[3])
+
+            qw = quat[0]
+            qx = quat[1]
+            qy = quat[3]
+            qz = -quat[2]
+
+############################ MUSE #####################################################
+
+
+
+
+############## A3 #####################################################################
+
+        if algorithm == "A3":
+            # A3 Algorithm - gyroscope calibration
+            omega1 = [gx, gy, gz]
+            dt = time_diff
+            quatG = IntegrationRK4(omega0, omega1, quat, dt)
+            yawG, pitchG, rollG = QuatToEuler(quatG)
+            omega0 = omega1
+            # A3 Algorithm - accelerometer, magnetometer calibration
+            yawAM, pitchAM, rollAM, quatAM = AccMagOrientation(accel, mag)
+            # TODO: Update quaternion if w < 240 degree, a < 2g 
+            w = max(gyro)*180/math.pi
+            a = max(accel)
+
+            if w < 240 and a < 2*9.8:
+
+                print(w)
+                print(a)
+                headingM = headingfromMag(mag)
+                if similaritywindow > 2:
+                    # print("similaritywindow")
+                    # calculate pc and pg 
+                    pc = 1/(2**np.var(np.subtract(Sc,C)))
+                    pg = 1/(2**np.var(np.subtract(Sg,G)))
+                    print(pc)
+                    print(pg)
+                    if pc > 0.2 and pg > 0.2: 
+                        print("change?")
+                        # TODO: if Ec < Eg, then update quaternion
+                        E1 = -32.14*pc + 19.93
+                        E2 = -12.86*pg + 11.57
+                        Ec = max(E1, E2)
+                        Eg = (Eg + 0.0003*w*time_diff + 0.001*a*time_diff)*1000
+
+                        print(Ec)
+                        print(Eg)
+                        if Ec < Eg*1000: 
+
+                            print("yes")
+                            quat = quatAM
+                #         quat = quatAM
+
+                        else:
+                            quat = quatG
+                    # reset values
+                    similaritywindow = 0 
+                    C = []
+                    Sc = []
+                    Sg = []
+                    G = []
+                    Eg = 0 
+                else:
+                #     #TODO: update Eg 
+                    Eg = Eg + 0.0003*w*time_diff + 0.001*a*time_diff
+                    C.append(headingM)
+                    Sc.append(yawG)
+                    Sg.append(rollG)
+                    G.append(rollAM)
+                    similaritywindow = similaritywindow + time_diff
+                    quat = quatG
+
+                # if initial <50:
+                #     quat = quatAM
+                #     print("initial")
+                #     initial = initial + 1
+
+                # else:
+                #     print("not initial")
+                #     quat = quatG
+
+
+                qw = quat[0]
+                qx = quat[1]
+                qy = quat[3]
+                qz = -quat[2]
+
+
+
+
+
+############## A3 #####################################################################
+
+
+############## Madgwick Algorithm #####################################################
+
+        if algorithm == "Madgwick":
         #Madgwick Algorithm
-        Imupredict = MadgwickAHRS();
-        Imupredict.quaternion = quat
-        Imupredict.sampleperiod = time_diff
-        Imupredict.update(gyro,accel,mag)
-        quat = Imupredict.quaternion
+            Imupredict = MadgwickAHRS();
+            Imupredict.quaternion = quat
+            Imupredict.sampleperiod = time_diff
+            Imupredict.update(gyro,accel,mag)
+            quat = Imupredict.quaternion
 
-        qw = quat[0]
-        qx = quat[1]
-        qy = quat[3]
-        qz = -quat[2]
+            qw = quat[0]
+            qx = quat[1]
+            qy = quat[3]
+            qz = -quat[2]
+
+
+############## Madgwick Algorithm #####################################################
+
+
 
         q.w = qw
         q.x = qx
