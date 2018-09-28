@@ -19,7 +19,7 @@ from ponycube import *
 from madgwickahrs import *
 import quaternion
 from quaternion import QuaternionClass
-from a3 import quatNormalized, IntegrationRK4, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
+from a3muse import quatNormalized, IntegrationRK4, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
 from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
