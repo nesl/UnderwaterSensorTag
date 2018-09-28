@@ -24,7 +24,7 @@ from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
 
-algorithm = "MUSE"    #A3, MUSE, Madgwick
+algorithm = "Madgwick"    #A3, MUSE, Madgwick
 
 host = ''
 port = 5555
@@ -115,19 +115,19 @@ while 1:
                     # O-1 : inverse of the rot Mat 
                     # Calculate Ng = O*NL- Equation (1)
                     N_L = np.mat([[mx],[my],[mz]])
-                    print("N_L")
-                    print(N_L)
+                    # print("N_L")
+                    # print(N_L)
                     O = QuatToRotMat(quatAM)
                     N_G = O*N_L
                     # print("N_G")
                     # print(N_G)
                     initial = initial + 1
 
-                    O_hat = QuatToRotMat(quatG)  
-                    Oinv_hat = inv(O_hat)
-                    N_L_hat = Oinv_hat * N_G  
-                    print("N_L_hat")  
-                    print(N_L_hat)                
+                    # O_hat = QuatToRotMat(quatG)  
+                    # Oinv_hat = inv(O_hat)
+                    # N_L_hat = Oinv_hat * N_G  
+                    # print("N_L_hat")  
+                    # print(N_L_hat)                
      
 
 
@@ -157,6 +157,13 @@ while 1:
                             print("yes, update quat with AM")
                             quat = quatAM
                             update = 1
+
+                        # Update 3D magnetic vector estimation
+                        N_L = np.mat([[mx],[my],[mz]])
+                        # print("N_L")
+                        # print(N_L)
+                        O = QuatToRotMat(quatAM)
+                        N_G = O*N_L
 
                                                 # reset values
                         similaritywindow = 0 
@@ -205,57 +212,6 @@ while 1:
                         print("update quat with MUSE")
 
                     update = 0
-
-
-                
-                # if False: # Acceleration roughly measures 9.8 m/s2
-                #     print("false")
-                # else:
-                #     print("MUSE")
-                #     #muse update 
-                #     # Inferred NL - equation (3)
-                #     O_hat = QuatToRotMat(quatG)
-                #     print("O_hat")
-                #     print(O_hat)
-                #     Oinv_hat = inv(O_hat)
-
-                #     N_L_hat = Oinv_hat * N_G
-                #     print("N_L_hat")
-                #     N_L_hat = np.array([np.array(N_L_hat)[0][0], np.array(N_L_hat)[1][0], np.array(N_L_hat)[2][0]])
-                #     print(N_L_hat)
-                #     N_L = np.array([mx,my,mz])
-                #     print("N_L")
-                #     print(N_L)
-
-                #     # # Rotation Axis 
-                #     RotAxis = np.cross(N_L_hat, N_L)
-
-
-                #     # # Rotation Angle 
-                #     RotAngle = angle_between(N_L_hat, N_L)
-                #     print("rotation angle")
-                #     print(RotAngle)
-                #     # alpha = 0.01
-                #     # alphaRotAngle = alpha* RotAngle
-
-                #     # # delta Rotation Matrix - Equation (4)
-                #     # deltaRotMat = AxisAngleToRotMat(RotAxis, alphaRotAngle)
-
-                #     # # Updated orientation - Equation (5)
-                #     # Onew_hat = np.array(inv(deltaRotMat)*O_hat)
-                #     # print("Onew_hat")
-                #     # print(Onew_hat)
-                #     # print("quatMUSE")
-
-                #     # quatMUSE = RotMatToQuat(O_hat)
-                #     # print(quatMUSE)
-                #     # print(quatMUSE[0])
-                #     # print(quatMUSE[1])
-                #     # print(quatMUSE[2])
-                #     # print(quatMUSE[3])
-
-                    
-                #     #quat = quat + QuaternionClass(quatMUSE[0], quatMUSE[1], quatMUSE[2], quatMUSE[3])
 
             qw = quat[0]
             qx = quat[1]
