@@ -26,22 +26,9 @@ from numpy import linalg as LA
 
 
 
-algorithm = "MUSE+A3"    #A3, MUSE, Madgwick, MUSE+A3
+algorithm = "Madgwick"    #A3, MUSE, Madgwick, MUSE+A3
 
-# writetofile = 0
-
-# if writetofile == 1:
-
-#     filename = open("/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/imu_data.txt", "w")
-
-host = ''
-port = 5555
-
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-s.bind((host, port))
-
+filename = open("/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/imu_data.txt", "r")
 
 pygame.init()
 screen = Screen(480,400,scale=1.5)
@@ -72,34 +59,20 @@ Az = []
 
 beta = 0.80
 
-while 1:
-    message, address = s.recvfrom(8192)
-#    print(message)
-    my_array = message.split(b',')
+for i in filename: 
+    my_array = i.split()
     length = len(my_array)
     if len(my_array) >= 13:
-        ax = float(my_array[2])
-        ay = float(my_array[3])
-        az = float(my_array[4])
-        gx = float(my_array[6])
-        gy = float(my_array[7])
-        gz = float(my_array[8])
-        mx = float(my_array[10])
-        my = float(my_array[11])
-        mz = float(my_array[12])
+        ax = my_array[0]
+        ay = my_array[1]
+        az = my_array[2]
+        gx = my_array[3]
+        gy = my_array[4]
+        gz = my_array[5]
+        mx = my_array[6]
+        my = my_array[7]
+        mz = my_array[8]
 
-        # if writetofile == 1:
-
-        #     filename.write("%f " %ax)
-        #     filename.write("%f " %ay)
-        #     filename.write("%f " %az)
-        #     filename.write("%f " %gx)
-        #     filename.write("%f " %gy)
-        #     filename.write("%f " %gz)
-        #     filename.write("%f " %mx)
-        #     filename.write("%f " %my)
-        #     filename.write("%f " %mz)
-        #     filename.write("\n")
 
         if previous_timestamp <= 0:
             previous_timestamp = float(my_array[0])
@@ -172,18 +145,18 @@ while 1:
 
 
 
-                            E1 = -32.14*pc + 19.93
-                            E2 = -12.86*pg + 11.57
-                            Ec = max(E1, E2)
-                            Eg = Eg*1000
+                        E1 = -32.14*pc + 19.93
+                        E2 = -12.86*pg + 11.57
+                        Ec = max(E1, E2)
+                        Eg = Eg*1000
 
-                            print(Ec)
-                            print(Eg)
-                            if Ec < Eg*1000: 
+                        print(Ec)
+                        print(Eg)
+                        if Ec < Eg*1000: 
 
-                                print("yes, update quat with AM")
-                                quat = quatAM
-                                update = 1
+                            print("yes, update quat with AM")
+                            quat = quatAM
+                            update = 1
 
                         # Update 3D magnetic vector estimation
                         N_L = np.mat([[mx],[my],[mz]])
@@ -389,16 +362,16 @@ while 1:
 
             if w < 240 and a < 2*9.8:
 
-                # print(w)
-                # print(a)
+                print(w)
+                print(a)
                 headingM = headingfromMag(mag)
                 if similaritywindow > 2:
                     # print("similaritywindow")
                     # calculate pc and pg 
                     pc = 1/(2**np.var(np.subtract(Sc,C)))
                     pg = 1/(2**np.var(np.subtract(Sg,G)))
-                    # print(pc)
-                    # print(pg)
+                    print(pc)
+                    print(pg)
                     if pc > 0.2 and pg > 0.2: 
                         print("change?")
                         # TODO: if Ec < Eg, then update quaternion
