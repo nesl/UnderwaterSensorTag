@@ -1,3 +1,4 @@
+# Author: eunsunlee
 import numpy as np
 import math
 from math import sin, cos, atan2, atan, asin
