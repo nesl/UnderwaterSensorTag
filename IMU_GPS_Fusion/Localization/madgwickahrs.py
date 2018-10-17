@@ -65,8 +65,6 @@ class MadgwickAHRS:
             return
         accelerometer /= norm(accelerometer)
         
-        return accelerometer
-
         # Normalise magnetometer measurement
         if norm(magnetometer) is 0:
             warnings.warn("magnetometer is zero")
@@ -98,7 +96,6 @@ class MadgwickAHRS:
 
         # Compute rate of change of quaternion
         qdot = (q * Quaternion(0, gyroscope[0], gyroscope[1], gyroscope[2])) * 0.5 - self.beta * step.T
-
         # Integrate to yield quaternion
         q += qdot * self.samplePeriod
         self.quaternion = Quaternion(q / norm(q))  # normalise quaternion

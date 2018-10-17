@@ -23,10 +23,11 @@ from a3muse import quatNormalized, IntegrationRK4, AccMagOrientation, headingfro
 from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
+from mpulib import computeheading
 
 
 
-algorithm = "MUSE+A3"    #A3, MUSE, Madgwick, MUSE+A3
+algorithm = "A3"    #A3, MUSE, Madgwick, MUSE+A3
 
 # writetofile = 0
 
@@ -392,6 +393,8 @@ while 1:
                 # print(w)
                 # print(a)
                 headingM = headingfromMag(mag)
+                print("headingM: ", headingM)
+                print(computeheading(mx, my))
                 if similaritywindow > 2:
                     # print("similaritywindow")
                     # calculate pc and pg 

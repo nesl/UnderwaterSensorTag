@@ -29,7 +29,87 @@ def IntegrationRK4(omega0, omega1, quat, dt):
 
         qdot = np.transpose(dt*(1/6)*(K1 + 2*K2 + 2*K3 + K4))
         quat= quat + QuaternionClass(np.array(qdot)[0][0], np.array(qdot)[0][1], np.array(qdot)[0][2], np.array(qdot)[0][3])
+        quat = qnormalized(quat)
         return quat
+
+def AccMag2Euler(accel, mag):
+    # accel = np.array(accel)/LA.norm(accel)
+    # mag = np.array(mag)/LA.norm(mag)
+
+    g = np.sqrt(accel[0]**2 + accel[1]**2 + accel[2]**2)
+    # accel = np.array(accel)/g
+
+    yaw = atan2(mag[1], mag[0])
+    roll = atan2(accel[1], accel[2])
+    pitch = atan(-accel[0]/(accel[1]*sin(roll) + accel[2]*cos(roll)))
+   # pitch = atan2(-accel[0], np.sqrt(accel[1]**2 + accel[2]**2))
+    
+
+    quat = EulerToQuat(yaw, pitch, roll)
+
+    q = QuaternionClass(quat[0], quat[1], quat[2], quat[3])
+    q = qnormalized(q)
+
+    return yaw, pitch, roll, quat
+
+def androidAccMag2Euler(accel,mag):
+    Ax = accel[0]
+    Ay = accel[1]
+    Az = accel[2]
+    Ex = mag[0]
+    Ey = mag[1]
+    Ez = mag[2]
+
+    Hx = Ey*Az - Ez*Ay
+    Hy = Ez*Ax - Ex*Az
+    Hz = Ex*Ay - Ey*Ax
+    normH = np.sqrt(Hx*Hx + Hy*Hy + Hz*Hz)
+
+    if normH < 0.1: 
+        print("free fall")
+
+    invH = 1.0/normH
+    Hx *= invH 
+    Hy *= invH
+    Hz *= invH 
+    invA = 1.0/np.sqrt(Ax**2 + Ay**2 + Az**2)
+    Ax *= invA
+    Ay *= invA
+    Az *= invA
+    Mx = Ay*Hz - Az*Hy
+    My = Az*Hx - Ax*Hz
+    Mz = Ax*Hy - Ay*Hx
+
+    m00 = Hx 
+    m01 = Hy 
+    m02 = Hz 
+    m10 = Mx 
+    m11 = My 
+    m12 = Mz 
+    m20 = Ax 
+    m21 = Ay 
+    m22 = Az 
+
+    R = np.array([[m00, m01, m02],[m10, m11, m12],[m20, m21, m22]])
+
+    yaw = atan2(Hy, My)
+    pitch = math.asin(-Ay)
+    roll = atan2(-Ax, Az)
+
+    q = EulerToQuat(yaw, pitch, roll)
+
+    # q = RotMatToQuat(R)    
+    q = QuaternionClass(q[0], q[1], q[2], q[3])
+    # q = qnormalized(q)
+
+    # yaw, pitch, roll = QuatToEuler(q)
+
+    return yaw, pitch, roll, q
+
+
+
+
+
 
 def AccMagOrientation(accel, mag):
 # source: https://www.nxp.com/files-static/sensors/doc/app_note/AN4248.pdf
@@ -416,6 +496,7 @@ def EulerToQuat(yaw, pitch, roll):
     return q 
 
 
+
 def QuatToEuler(q):
 
     # print("q before")
@@ -467,6 +548,22 @@ def headingfromMag(mag):
             headingM = 0.0
 
     return headingM
+
+
+def qnormalized(q): 
+    qw = q[0]
+    qx = q[1]
+    qy = q[2]
+    qz = q[3]
+
+    mag_sqrd = qw*qw + qx*qx + qy*qy + qz*qz
+    norm = np.sqrt(mag_sqrd)
+
+    qw = qw/norm
+    qx = qx/norm
+    qy = qy/norm
+    qz = qz/norm
+    return QuaternionClass(qw, qx, qy, qz)
 
 
 def quatNormalized(q):
