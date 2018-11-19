@@ -30,8 +30,10 @@ import matplotlib.pyplot as plt
 # filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_static_write.txt', 'r')
 # filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_static_write.txt', 'r')
 
-# filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_movement_write.txt', 'r')
-# filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_movement_write.txt', 'r')
+filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_movement_write.txt', 'r')
+filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_movement_write.txt', 'r')
+filenameIMU = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_optitrack_movement_values.txt', 'w')
+
 
 
 # filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_straight_write.txt', 'r')
@@ -48,8 +50,8 @@ import matplotlib.pyplot as plt
 
 # filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_leon_tianwei_3dprinter_write.txt', 'r')
 # filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_leon_tianwei_3dprinter_write.txt', 'r')
-
 # filenameIMU = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_leontianwei3d_values.txt', 'w')
+
 # filenameOptitrack = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_leontianwei3d_Optitrack.txt', 'w')
 # filenameMadgwick = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_leontianwei3d_Madgwick.txt', 'w')
 # filenameA3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_leontianwei3d_A3.txt', 'w')
@@ -57,9 +59,9 @@ import matplotlib.pyplot as plt
 # filenameES = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_leontianwei3d_ES.txt', 'w')
 
 
-filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_long_trajectory_write.txt', 'r')
-filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_long_trajectory_write.txt', 'r')
-filenameIMU = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_long_trajectory_values.txt', 'w')
+# filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_long_trajectory_write.txt', 'r')
+# filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_long_trajectory_write.txt', 'r')
+# filenameIMU = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_long_trajectory_values.txt', 'w')
 
 
 
