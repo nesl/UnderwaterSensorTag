@@ -237,6 +237,12 @@ typedef struct
 // Display Interface
 //Display_Handle dispHandle = NULL;
 
+
+//TODO: setting the address of the launchpad
+
+uint8_t bdAddress[B_ADDR_LEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+
 #define AQUAMOTE_15 0
 
 #ifdef AQUAMOTE_0
@@ -564,6 +570,8 @@ static void SPPBLEClient_init(void)
   // so that the application can send and receive messages.
   ICall_registerApp(&selfEntity, &sem);
 
+  //TODO: remove
+  HCI_EXT_SetBDADDRCmd(bdAddress);
   // Handling of LED
   hGpioPin = PIN_open(&pinGpioState, SPPBLEAppPinTable);
 
@@ -675,11 +683,14 @@ uint8_t aquaNumGiven = 0;
 volatile uint8_t receivedCharacter = 0;
 volatile uint8_t newValue = 0;
 
+
 static void SPPBLEClient_taskFxn(UArg a0, UArg a1)
 {
   // Initialize application
   SPPBLEClient_init();
-  uint8_t hello[] = "Enter the Aquamote Number you want to retrieve from: ";
+  //uint8_t hello[] = "Enter the Aquamote Number you want to retrieve from: ";
+  uint8_t hello[] = "Enter 1 - retrieve data, 2- erase data: ";
+
   DEBUG(hello);
 
 
@@ -716,7 +727,22 @@ static void SPPBLEClient_taskFxn(UArg a0, UArg a1)
           }
       }
   }
+
+
   aquamote_number = atoi(aquamote_num_buffer);
+
+  //TODO: remove if not working
+  if(aquamote_number == 1){
+      uint8_t bdAddress[B_ADDR_LEN] = {0x04, 0x98, 0xA2, 0x2D, 0x07, 0x98};
+      HCI_EXT_SetBDADDRCmd(bdAddress);
+  }else if(aquamote_number == 2){
+      uint8_t bdAddress[B_ADDR_LEN] = {0x04, 0x98, 0xA2, 0x2D, 0x07, 0x99};
+      HCI_EXT_SetBDADDRCmd(bdAddress);
+  }
+
+  //TODO: remove if not working
+  aquamote_number = 0;
+
   aquamote_peerAddr[5] = 5+aquamote_number;
   DEBUG_NEWLINE();
   //DEBUG(Util_convertBdAddr2Str(aquamote_peerAddr));

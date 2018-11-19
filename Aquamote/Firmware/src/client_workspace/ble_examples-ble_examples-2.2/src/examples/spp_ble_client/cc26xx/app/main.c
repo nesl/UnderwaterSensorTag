@@ -87,6 +87,7 @@ extern uint16 dispHandle;
  */
 int main()
 {
+
   /* Register Application callback to trap asserts raised in the Stack */
   RegisterAssertCback(AssertHandler);
 
