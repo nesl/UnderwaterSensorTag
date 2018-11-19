@@ -46,17 +46,21 @@
  */
 
 #include <xdc/runtime/Error.h>
+#include <ti/sysbios/knl/Task.h>
 
 #include <ti/drivers/Power.h>
 #include <ti/drivers/power/PowerCC26XX.h>
 #include <ti/sysbios/BIOS.h>
-
+#include <ti/drivers/SPI.h>
+#include <ti/drivers/UART.h>
+#include "board.h"
 #include "icall.h"
 #include "hal_assert.h"
 #include "bcomdef.h"
 #include "peripheral.h"
 #include "spp_ble_server.h"
 #include "inc/sdi_task.h" 
+
 
 /* Header files required to enable instruction fetch cache */
 #include <inc/hw_memmap.h>
@@ -71,6 +75,7 @@ bleUserCfg_t user0Cfg = BLE_USER_CFG;
 
 #endif // USE_DEFAULT_USER_CFG
 
+#define VER_3_02 0
 //#include <ti/mw/display/Display.h>
 
 
@@ -135,12 +140,18 @@ extern uint16 dispHandle;
  *
  * @return      None.   
  */
+
 int main()
 {
   /* Register Application callback to trap asserts raised in the Stack */
   RegisterAssertCback(AssertHandler);
 
   PIN_init(BoardGpioInitTable);
+  Board_initSPI();
+
+#ifndef VER_3_1
+      Board_initUART();
+#endif
 
 #ifdef CC1350_LAUNCHXL
   // Enable 2.4GHz Radio
@@ -170,7 +181,7 @@ int main()
 
   /* SDI UART Example Task - Priority 2 */
   SDITask_createTask();
-    
+
   SPPBLEServer_createTask();
 
   /* enable interrupts and start SYS/BIOS */

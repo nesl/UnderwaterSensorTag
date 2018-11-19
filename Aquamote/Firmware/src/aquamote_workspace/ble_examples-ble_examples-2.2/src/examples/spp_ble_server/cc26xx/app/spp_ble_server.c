@@ -42,7 +42,6 @@
  * INCLUDES
  */
 #include <string.h>
-#include <stdlib.h>
 
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Clock.h>
@@ -78,11 +77,10 @@
 
 #include "board.h"
 
-#include "inc/sdi_tl_uart.h"
 #include "serial_port_service.h"
 #include "spp_ble_server.h"
 #include "inc/sdi_task.h"
-//esl #include "inc/sdi_tl_uart.h"
+#include "inc/sdi_tl_uart.h"
 
 /********************************EUNSUN ******************************/
 //#include "dataTransferService.h"
@@ -91,7 +89,7 @@
 //#include <ti/mw/display/Display.h>
 //#include <gap.h>
 #include <ti/sysbios/BIOS.h>
-//esl #include <ti/drivers/UART.h>
+#include <ti/drivers/UART.h>
 #include "aon_rtc.h"
 #include "scif.h"
 #include <ti/drivers/SPI.h>
@@ -99,10 +97,11 @@
 #define BV(x)    (1 << (x))
 //#include "bcomdef.h"
 #define BUF_LEN 7
-#define SNV_ID_APP 0x80
+#define SNV_ID_APP 0x81
 uint8 buf[BUF_LEN] = {0,0,0,0,0,0,0};
 
-#define VER_3_1 0
+//TODO
+#define VER_3_2 0
 
 #ifdef VER_3_0
 #define STORAGE_MAX_ADDRESS 0x0001FFFF
@@ -112,8 +111,14 @@ uint8 buf[BUF_LEN] = {0,0,0,0,0,0,0};
 #define STORAGE_MAX_ADDRESS 0x0000FFFF
 #endif
 
+#ifdef VER_3_2
+#define STORAGE_MAX_ADDRESS 0x0000FFFF
+#endif
 
 
+
+
+int n = 0;
  /********************************End previous includes*****************************/
 /*********************************************************************/
 
@@ -227,27 +232,32 @@ uint8_t runOnce = 0;
 uint8_t phone = 0;
 
 /********************************EUNSUN ******************************/
+
+//PRESSURE
+uint8_t PressureCRC4(void);
+uint16_t n_prom[7] = {[0 ... 6] = 0x00};
+void Pressurecalculate(void);
+uint32_t D1 = 0;
+uint32_t D2 = 0;
+uint8_t PTvalue[6] = {[0 ... 5] = 0x00};
+int64_t P;
+int64_t TEMP;
+
+
 int selectedMode = 0;
 int readresult = 0;
 static UInt peripheralNum = 0;
-static SPI_Params spiParams;
-static SPI_Handle spi;
+SPI_Params spiParams;
+SPI_Handle spi;
 
-static PIN_Handle CSPinHandle;
-static PIN_State CSPinState;
-#define PIN_SPI0_CS IOID_7
 
-const PIN_Config CSPinTable[] = {
-    PIN_SPI0_CS   | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
-    PIN_TERMINATE
-};
 
 uint32_t pageblockadd = 0x00000000;
 uint32_t lastpagewritten = 0;
 SPI_Transaction spiTransaction;
 uint16_t columnadd = 0x0000;
 uint8_t passArray[2048] = {[0 ... 2047] = 0x00};
-uint8_t passArray_temp[300] = {[0 ... 299] = 0x00};
+//uint8_t passArray_temp[300] = {[0 ... 299] = 0x00};
 int countarray = 0;
 uint32_t sec;
 uint32_t frac;
@@ -257,7 +267,30 @@ int countapage=0;
 
 Semaphore_Handle hSemMainLoop;
 Semaphore_Struct semMainLoop;
-//uint8_t tempval = 1;
+uint8_t tempval = 1;
+int gpsget = 0;
+int gps_break;
+int gpsturnon;
+uint8_t MEMID[2];
+
+//#define PIN_SPI0_CS IOID_7
+//static PIN_Handle CSPinHandle;
+//static PIN_State CSPinState;
+//const PIN_Config CSPinTable[] = {
+//    PIN_SPI0_CS   | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
+//    PIN_TERMINATE
+//};
+
+#define PIN_SPI0_CS IOID_7
+PIN_Handle CSPinHandle;
+PIN_State CSPinState;
+PIN_Config CSPinTable[] = {
+    //Board_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN
+    //PIN_SPI0_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,
+    PIN_SPI0_CS   | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH   | PIN_PUSHPULL,
+    PIN_TERMINATE
+};
+
 #define LED_PIN IOID_9
 PIN_Handle ledPinHandle;
 PIN_State ledPinState;
@@ -265,99 +298,19 @@ PIN_Config ledPinTable[] = {
     LED_PIN | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
     PIN_TERMINATE
 };
-
-uint8_t numSCBuf =0;
-uint8_t runOnce2 =0;
-
-uint8_t retrievalAddress[B_ADDR_LEN] = { 0x04, 0x98, 0xA2, 0x2D, 0x07, 0x98 };
-uint8_t eraseAddress[B_ADDR_LEN] =     { 0x85, 0xB9, 0x99, 0x2D, 0x07, 0x98 };
-//uint8_t retrievalAddress[B_ADDR_LEN] = { 0x81, 0xD7, 0x7E, 0xAB, 0x78, 0xCC };
-//uint8_t eraseAddress[B_ADDR_LEN] =     { 0x80, 0xEF, 0x7E, 0xAB, 0x78, 0xCC };
-
-#define AQUAMOTE_0 0
-
-#ifdef AQUAMOTE_0
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x5};
-#endif
-
-#ifdef AQUAMOTE_1
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x6};
-#endif
-
-#ifdef AQUAMOTE_2
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x7};
-#endif
-
-#ifdef AQUAMOTE_3
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x8};
-#endif
-
-#ifdef AQUAMOTE_4
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x9};
-#endif
-
-#ifdef AQUAMOTE_5
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0xA};
-#endif
-
-#ifdef AQUAMOTE_6
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0xB};
-#endif
-
-#ifdef AQUAMOTE_7
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0xC};
-#endif
-
-#ifdef AQUAMOTE_8
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0xD};
-#endif
-
-#ifdef AQUAMOTE_9
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0xE};
-#endif
-
-#ifdef AQUAMOTE_10
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0xF};
-#endif
-
-#ifdef AQUAMOTE_11
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x10};
-#endif
-
-#ifdef AQUAMOTE_12
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x11};
-#endif
-
-#ifdef AQUAMOTE_13
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x12};
-#endif
-
-#ifdef AQUAMOTE_14
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x13};
-#endif
-
-#ifdef AQUAMOTE_15
-uint8_t bdAddress[B_ADDR_LEN] = {0x0, 0x1, 0x2, 0x3, 0x4, 0x14};
-#endif
-
 #define ONGPS IOID_8
 PIN_Handle ongpsPinHandle;
 PIN_State ongpsPinState;
-static UART_Handle uart;
-static UART_Params uartParams;
-uint8_t GPS_data[48];
-uint8_t GPGGAinput[65];
-char input;
-
-int mloc;
-int gpsfirst = 0;
-int gpstimeout = 0;
-
 PIN_Config ongpsPinTable[] = {
      ONGPS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
     PIN_TERMINATE
 };
 
+int gps_check = 0;
+int numBuffer = 0;
+uint8_t numSCBuf =0;
+uint8_t runOnce2 =0;
+uint8 bdAddress[B_ADDR_LEN] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
 /*********************************************************************/
 
 /*********************************************************************
@@ -371,15 +324,27 @@ void SPI_params_init();
 int readfromapage(UArg arg0);
 
 //
-static void Turn_Off_BLE(void);
-void GPS_UART_init(void);
-void GPSinit(UArg arg0);
+static void SimpleBLEPeripheral_performPeriodicTask(void);
+//
+void GPSONOFF();
+#define WAKEUP IOID_11
+PIN_Handle wakeupPinHandle;
+PIN_State wakeupPinState;
+
+PIN_Config wakeupPinTable[]={
+    WAKEUP | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
+    PIN_TERMINATE
+};
+
 void GPScollect(UArg arg0);
+void GPS_uart();
+void GPSSWITCH(int ONOFF);
 void scCtrlReadyCallback(void);
 void scTaskAlertCallback(void);
 int Mem_SF(uint8_t);
 //void Mem_lock();
-void processTaskAlert(UArg arg0);
+void processTaskAlert(void);
+void save(void);
 void savetoapage(UArg arg0);
 void createarray();
 //
@@ -398,6 +363,25 @@ void Mem_WE();
 void blockerasefxn();
 void getlastpageadd();
 void savelastpageadd();
+void Mem_ID();
+
+//TODO: 827
+
+//static UART_Handle uart;
+//static UART_Params uartParams;
+//static UART_Params paramsUART;
+
+uint8_t GPGGAinput[65];
+uint8_t GPGGAmimic[10];
+char input;
+char GPGGA[5];
+int gpsfirst = 0;
+
+
+uint8_t retrievalAddress[B_ADDR_LEN] = {0x04, 0x98, 0xA2, 0x2D, 0x07, 0x98};
+uint8_t eraseAddress[B_ADDR_LEN] =    {0x04, 0x98, 0xA2, 0x2D, 0x07, 0x99};
+//uint8_t retrievalAddress[B_ADDR_LEN] = { 0x04, 0x98, 0xA2, 0x2D, 0x07, 0x98 };
+//uint8_t eraseAddress[B_ADDR_LEN] =     { 0x85, 0xB9, 0x99, 0x2D, 0x07, 0x98 };
 /*********************************************************************/
 
 // Entity ID globally used to check for source and/or destination of messages
@@ -603,6 +587,20 @@ void SPPBLEServer_createTask(void)
 {
 
 
+
+   ongpsPinHandle = PIN_open(&ongpsPinState, ongpsPinTable);
+   if(!ongpsPinHandle){
+
+   }
+//   wakeupPinHandle = PIN_open(&wakeupPinState, wakeupPinTable);
+//   if(!wakeupPinHandle){
+//
+//   }
+   CS_init();
+
+
+
+
   Task_Params taskParams;
 
   // Configure task
@@ -626,6 +624,7 @@ void SPPBLEServer_createTask(void)
   if(!ledPinHandle) {
       //System_abort("Error initializing board LED pins\n");
   }
+
 
 }
 
@@ -697,6 +696,7 @@ static void SPPBLEServer_init(void)
   // so that the application can send and receive messages.
   ICall_registerApp(&selfEntity, &sem);
 
+  //TODO: comment the code below
   // Hard code the BD Address till CC2650 board gets its own IEEE address
   HCI_EXT_SetBDADDRCmd(bdAddress);
 
@@ -711,8 +711,8 @@ static void SPPBLEServer_init(void)
   appMsgQueue = Util_constructQueue(&appMsg);
   //appUARTMsgQueue = Util_constructQueue(&appUARTMsg);
   // Create one-shot clocks for internal periodic events.
-//  Util_constructClock(&periodicClock, SPPBLEServer_clockHandler,
-//                      SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
+  Util_constructClock(&periodicClock, SPPBLEServer_clockHandler,
+                      SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
 
   Board_initKeys(SPPBLEServer_keyChangeHandler);
 
@@ -849,9 +849,8 @@ static void SPPBLEServer_init(void)
   //Display_print0(dispHandle, 0, 0, "SPP BLE Server");
 #endif // FEATURE_OAD
 
-  SPPBLEServer_blinkLed(Board_RLED, 1);
-  Board_initSPI();
-  SPI_params_init();
+  //SPPBLEServer_blinkLed(Board_RLED, 1);
+
 //  passArray2[0] = 1;
 //  if(passArray2[0] == 1){
 //      DEBUG("passarray2 ");
@@ -868,18 +867,103 @@ static void SPPBLEServer_init(void)
  * @return  None.
  */
 
-
+int test = 0;
 
 static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
 {
+  //Board_initUART();
+
+
+  SPI_params_init();
+
+
+
+
+//  while(test == 0){
+//
+//      if (PIN_getInputValue(WAKEUP)){
+//          test = 2;
+//      }else{
+//          GPSONOFF();
+//          test = 0;
+//      }
+//
+//  }
+
+
+//
+
+#ifndef VER_3_1
+  UART_close(uartHandle);
+
+  //UART_Params_init(&paramsUART);
+
+
+  paramsUART.readMode = UART_MODE_BLOCKING;
+  paramsUART.writeMode = UART_MODE_BLOCKING;
+  paramsUART.readReturnMode = UART_RETURN_FULL;
+  paramsUART.readTimeout = 100000;
+  paramsUART.baudRate = 4800;
+  uartHandle = UART_open(Board_UART, &paramsUART);
+
+  GPSSWITCH(1);
+
+
+
+  UART_read(uartHandle, &GPGGAinput, 10);
+  GPSSWITCH(0);
+  UART_close(uartHandle);
+  paramsUART.readMode = UART_MODE_CALLBACK;
+  paramsUART.writeMode = UART_MODE_CALLBACK;
+  paramsUART.readReturnMode = UART_RETURN_NEWLINE;;
+  paramsUART.baudRate = SDI_UART_BR;
+  uartHandle = UART_open(Board_UART, &paramsUART);
+
+
+#endif
+
+
+
+
+
+
+
+  ////////////////////////////////////////////////////
+
+//
+//  paramsUART.readCallback = SDITLUART_readCallBack;
+//  paramsUART.writeCallback = SDITLUART_writeCallBack;
+  //////////////////////////////////////////////////////
+
+/*  paramsUART.writeMode = UART_MODE_CALLBACK;
+  paramsUART.readMode = UART_MODE_CALLBACK;
+  paramsUART.baudRate = 115200;
+  uartHandle = UART_open(Board_UART, &paramsUART);
+  UART_close(uartHandle);
+  paramsUART.baudRate = 4800;
+  paramsUART.readMode = UART_MODE_BLOCKING;
+  paramsUART.writeMode = UART_MODE_BLOCKING;
+*/
+
+  ///////////////////////////////////////////////////
+//  paramsUART.readTimeout = UART_WAIT_FOREVER;
+//  paramsUART.writeTimeout = UART_WAIT_FOREVER;
+//  paramsUART.readCallback = NULL;
+//  paramsUART.writeCallback = NULL;
+//  paramsUART.readReturnMode = UART_RETURN_FULL;
+  //////////////////////////////////////////////////
+
+
+
+
   PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-  Task_sleep((UInt)arg0);
+  Task_sleep((UInt)arg0/2);
   PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-  Task_sleep((UInt)arg0);
+  Task_sleep((UInt)arg0/2);
   PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-  Task_sleep((UInt)arg0);
+  Task_sleep((UInt)arg0/2);
   PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-  Task_sleep((UInt)arg0);
+  Task_sleep((UInt)arg0/2);
 
   // Initialize application
   SPPBLEServer_init();
@@ -892,7 +976,6 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
   uint32_t rtc_Hz = 40;  // 1Hz RTC
   scifStartRtcTicksNow(0x00010000 / rtc_Hz);
   scifStartTasksNbl(BV(SCIF_I2CIMUPRESSUREWARRAY1111_TASK_ID));
-
 
 
 //    uint8_t nv_status = NV_OPER_FAILED;
@@ -941,10 +1024,30 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
 
   //pageblockadd = 0;
 
-  //If program blocks on this line, then go inside of the getlastpageadd() function and follow the instructions
+
   getlastpageadd();
   lastpagewritten = pageblockadd;
-  pageblockadd = 0;
+//  savelastpageadd();
+//  pageblockadd = 0;
+//
+//
+//  Mem_ID();
+//
+//  pageblockadd = 0;
+//  Mem_SF(0x00);
+//  //blockerasefxn();
+//  lastpagewritten = 7;
+//  pageblockadd = 0;
+////
+//  readresult = readfromapage(arg0);
+//  readresult = readfromapage(arg0);
+//  readresult = readfromapage(arg0);
+//  readresult = readfromapage(arg0);
+//  readresult = readfromapage(arg0);
+//  readresult = readfromapage(arg0);
+//  readresult = readfromapage(arg0);
+
+
   //savelastpageadd();
 
   int chunkCounter = 0;
@@ -994,21 +1097,28 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
         }
       }
 
+      //phone = 1;
+      //PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
 
-      phone = 1;
       if(phone == 2){
+
+          if (lastpagewritten == 0){
+              lastpagewritten = 1;
+          }
+
+
           if(runOnce < 16 && connected ==1 && valueReceived == 1&&readresult == 0)
                 {
                     //First Send the Number of pages about to transfer
                     bStatus_t retVal3 = FAILURE;
                     if(runOnce2 == 0){
                         runOnce2 = 1;
-
+                        pageblockadd = 0;
+                        Mem_SF(0x00);
                         do{
                             retVal3 = SerialPortService_SetParameter(SERIALPORTSERVICE_CHAR_DATA, B_ADDR_LEN , bdAddress);
                         }while(retVal3 != SUCCESS);
                         SerialPortService_AddStatusTXBytes(B_ADDR_LEN);
-
                         buf[0] = lastpagewritten & 0xFF;
                         buf[1] = (lastpagewritten >>  8) & 0xFF;
                         buf[2] = (lastpagewritten >> 16) & 0xFF;
@@ -1022,7 +1132,7 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
 
                     }
                     if(runOnce == 0){
-                        //Task_sleep(150000);
+
                         //load in the next page into a buffer: readfromapage called
                         readresult = readfromapage(arg0);
                     }
@@ -1046,99 +1156,22 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
                     //ICall_signal(sem);
                 }else if(runOnce == 16 && connected ==1)
                 {
-//                    if(readresult == 1){    //checkforthelastpage
-//                        EndOfTransmission();
-//                        //DEBUG("ENDOFTRANSMISSION");
-//                        while(1){
-//                            PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//                            Task_sleep((UInt)arg0);
-//                            PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//                            Task_sleep((UInt)arg0);
-//                            PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//                            Task_sleep((UInt)arg0);
-//                            PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//                            Task_sleep((UInt)arg0*2);
-//                        }
-//                    }
-
-                    //readresult = 1;
                     chunkCounter = 0;
-//                    passArray[0] = 'N';
-//                    passArray[1] = 'E';
-//                    passArray[2] = 'W';
-//                    passArray[3] = ' ';
-//                    passArray[4] = 'P';
-//                    passArray[5] = 'A';
-//                    passArray[6] = 'G';
-//                    passArray[7] = 'E';
-//                    passArray[8] = '\r';
-//                    passArray[9] = '\n';
-                    //ESL
-//                    thePayload[0] = 'N';
-//                    thePayload[1] = 'E';
-//                    thePayload[2] = 'W';
-//                    thePayload[3] = ' ';
-//                    thePayload[4] = 'P';
-//                    thePayload[5] = 'A';
-//                    thePayload[6] = 'G';
-//                    thePayload[7] = 'E';
-//                    thePayload[8] = '\r';
-//                    thePayload[9] = '\n';
-
-                    //ESL
-//                    bStatus_t retVal3 = FAILURE;
-//                    do{
-//                    retVal3 = SerialPortService_SetParameter(SERIALPORTSERVICE_CHAR_DATA, 10, passArray); //esl
-//                    }while(retVal3 != SUCCESS);
-//
-//                    SerialPortService_AddStatusTXBytes(10);
-                    //SPPBLEServer_enqueueUARTMsg(SBP_UART_DATA_EVT, thePayload, 10);
-
                     runOnce = 0;
                 }
 
 
       }else if(phone == 1){
-          Turn_Off_BLE();//This turns off bluetooth
-          SDITLUART_closeUART(); //This turns off the SDI UART to allow GPS to use it
 
-          Mem_SF(0x00);    //Unlock all blocks
+          SimpleBLEPeripheral_performPeriodicTask();//This turns off bluetooth
+          //SDITLUART_closeUART(); //This turns off the SDI UART to allow GPS to use it
+          //SimpleBLEPeripheral_performPeriodicTask();
 
-          getlastpageadd(); //retrieve from non volatile storage the last page address
-          pageblockadd++;
+            Mem_SF(0x00);
 
+          //pageblockadd = 0;
 
-
-          //TODO GPS_UART_init();
-          //TODO GPSinit(arg0);
-
-          //TODO Check if we get first fix before we blink LED
-
-//TODO          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//          Task_sleep((UInt)arg0  >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-//          Task_sleep((UInt)arg0 >> 1);
-//          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-//          Task_sleep((UInt)arg0 >> 1);
-
+          pageblockadd = pageblockadd + 1;
           if(pageblockadd < 2){
               passArray[0] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[0]>>8;
               passArray[1] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[0];
@@ -1154,38 +1187,224 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
               passArray[11] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[5];
               passArray[12] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[6]>>8;
               passArray[13] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[6];
+
+
               savetoapage(arg0);
           }
 
-          passArray[2044] = 'G';
-          passArray[2045] = 'G';
-          passArray[2046] = '\r';
-          passArray[2047] = '\n';
+          n_prom[0] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[0];
+          n_prom[1] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[1];
+          n_prom[2] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[2];
+          n_prom[3] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[3];
+          n_prom[4] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[4];
+          n_prom[5] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[5];
+          n_prom[6] = scifTaskData.i2cimupressurewarray1111.output.pressureinit[6];
 
-          while(1){
-              //TODO Semaphore_pend(hSemMainLoop, BIOS_WAIT_FOREVER);
-              //TODO sec = AONRTCSecGet();
-              //TODO frac = AONRTCFractionGet();
-              GPScollect(arg0);
-              memcpy(&passArray[numSCBuf*56], &GPS_data[0], 48);
-              passArray[(numSCBuf+1)*56-8] = sec >> 24;
-              passArray[(numSCBuf+1)*56-7] = sec >> 16;
-              passArray[(numSCBuf+1)*56-6] = sec >> 8;
-              passArray[(numSCBuf+1)*56-5] = sec;
-              passArray[(numSCBuf+1)*56-4] = frac >> 24;
-              passArray[(numSCBuf+1)*56-3] = frac >> 16;
-              passArray[(numSCBuf+1)*56-2] = frac >> 8;
-              passArray[(numSCBuf+1)*56-1] = frac;
-              numSCBuf++;
-              if(numSCBuf >= 36){
-                  numSCBuf = 0;
-                  savetoapage(arg0);
-              }
-              //TODO processTaskAlert(arg0);
+          uint8_t crcRead = n_prom[0] >>12;
+          uint8_t crcCalcuated = PressureCRC4();
+          if (crcRead == crcCalcuated){
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+              Task_sleep((UInt)arg0/2);
+              PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+              Task_sleep((UInt)arg0/2);
           }
 
+
+#ifdef VER_3_1
+          while(1){
+              Semaphore_pend(hSemMainLoop, BIOS_WAIT_FOREVER);
+              scifClearAlertIntSource();
+              memcpy(&passArray[numBuffer], &scifTaskData.i2cimupressurewarray1111.output.result[0], 284);
+              numBuffer = numBuffer + 284;
+              memcpy(&PTvalue[0], &scifTaskData.i2cimupressurewarray1111.output.result[139],6);
+              D1 = PTvalue[1];
+              D1 = (D1 <<8) | PTvalue[0];
+              D1 = (D1 <<8) | PTvalue[3];
+              D2 = PTvalue[2];
+              D2 = (D2 <<8) | PTvalue[5];
+              D2 = (D2 <<8) | PTvalue[4];
+              Pressurecalculate();
+              long bound =  1010;
+
+              if (P > bound){
+                  PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+              }else{
+                  PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+
+              }
+              sec = AONRTCSecGet();
+              frac = AONRTCFractionGet();
+              passArray[numBuffer] = sec >> 24;
+              passArray[numBuffer+1] = sec >> 16;
+              passArray[numBuffer+2] = sec >> 8;
+              passArray[numBuffer+3] = sec;
+              passArray[numBuffer+4] = frac >> 24;
+              passArray[numBuffer+5] = frac >> 16;
+              passArray[numBuffer+6] = frac >> 8;
+              passArray[numBuffer+7] = frac;
+              numBuffer = numBuffer + 8;
+              if (numBuffer > 1800){
+                  savetoapage(arg0);
+                  numBuffer = 0;
+              }
+              scifAckAlertEvents();
+         }
+#endif
+
+          UART_close(uartHandle);
+
+          paramsUART.readMode = UART_MODE_BLOCKING;
+          paramsUART.writeMode = UART_MODE_BLOCKING;
+          paramsUART.readReturnMode = UART_RETURN_FULL;
+          paramsUART.readTimeout = 10000;
+          paramsUART.baudRate = 4800;
+          uartHandle = UART_open(Board_UART, &paramsUART);
+          GPSSWITCH(1);
+          int pressureGPS = 1;
+
+          int pressure_count = 0;
+
+
+          numBuffer = 0;
+          int gpscomma = 0;
+          int getgps = 1;
+
+          while(1){
+              Semaphore_pend(hSemMainLoop, BIOS_WAIT_FOREVER);
+              scifClearAlertIntSource();
+
+              //SCS Task
+              if (numBuffer+2+284+8 > 2048){
+                  savetoapage(arg0);
+                  numBuffer = 0;
+              }
+              passArray[numBuffer] = '#';
+              passArray[numBuffer+1] = 'I';
+              numBuffer = numBuffer + 2;
+              memcpy(&passArray[numBuffer], &scifTaskData.i2cimupressurewarray1111.output.result[0], 284);
+              numBuffer = numBuffer + 284;
+
+              //TURNONOFF GPS Depends on Pressure Value
+              long bound = 900;
+              if (pressure_count == 0){
+                  memcpy(&PTvalue[0], &scifTaskData.i2cimupressurewarray1111.output.result[139],6);
+                  D1 = PTvalue[1];
+                  D1 = (D1 <<8) | PTvalue[0];
+                  D1 = (D1 <<8) | PTvalue[3];
+                  D2 = PTvalue[2];
+                  D2 = (D2 <<8) | PTvalue[5];
+                  D2 = (D2 <<8) | PTvalue[4];
+                  Pressurecalculate();
+                  if (P > bound){
+                      //TurnONGPS
+                      //PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+                      if(pressureGPS == 0){
+                          GPSSWITCH(1);
+                          pressureGPS = 1;
+
+                      }
+                  }else{
+                      //TurnOFFGPS
+                      //PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+                      if(pressureGPS == 1){
+                          GPSSWITCH(0);
+                          pressureGPS = 0;
+                      }
+                  }
+                  pressure_count = 9;
+              }else{
+                  pressure_count = pressure_count - 1;
+              }
+
+              //Time
+              sec = AONRTCSecGet();
+              frac = AONRTCFractionGet();
+              passArray[numBuffer] = sec >> 24;
+              passArray[numBuffer+1] = sec >> 16;
+              passArray[numBuffer+2] = sec >> 8;
+              passArray[numBuffer+3] = sec;
+              passArray[numBuffer+4] = frac >> 24;
+              passArray[numBuffer+5] = frac >> 16;
+              passArray[numBuffer+6] = frac >> 8;
+              passArray[numBuffer+7] = frac;
+              numBuffer = numBuffer + 8;
+
+              PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
+
+              if(pressureGPS){
+                  if (getgps){
+                      gps_break = 0;
+                      gpsturnon = 0;
+                      while(gps_break <100){
+                         UART_read(uartHandle, &input, 1);
+                         gps_break = gps_break + 1;
+                         if (input == '$'){
+                            gpsturnon = 1;
+                            UART_read(uartHandle, &GPGGA, 5);
+                            if (GPGGA[0] == 'G'){
+                                if (GPGGA[1] == 'P'){
+                                    if (GPGGA[2] == 'G'){
+                                        if (GPGGA[3] == 'G'){
+                                            if (GPGGA[4] == 'A'){
+                                                UART_read(uartHandle, &GPGGAinput, 30);
+
+//                                                if (GPGGAinput[1] != ','){
+//                                                    gpscomma = 1;
+//                                                }
+//                                                if(gpscomma == 0){
+//                                                    PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
+//                                                }else{
+//                                                    PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+//                                                }
+                                                gps_break = 500;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                         }
+                      }
+                      input = '0';
+                      GPGGA[0] = '0';
+                      GPGGA[1] = '0';
+                      GPGGA[2] = '0';
+                      GPGGA[3] = '0';
+                      GPGGA[4] = '0';
+                      if (gpsturnon == 0){
+                          GPSONOFF();
+                      }
+                      getgps = 0;
+                  }else{
+                      if (numBuffer+32 > 2048){
+                          savetoapage(arg0);
+                          numBuffer = 0;
+                      }
+                      passArray[numBuffer] = '#';
+                      passArray[numBuffer+1] = 'F';
+                      numBuffer = numBuffer + 2;
+                      memcpy(&passArray[numBuffer],&GPGGAinput[0], 30 );
+                      numBuffer = numBuffer + 30;
+                      getgps = 1;
+                  }
+              }
+              scifAckAlertEvents();
+
+         }
+
       }else if(phone == 3){
-          Turn_Off_BLE();
+          SimpleBLEPeripheral_performPeriodicTask();//This turns off bluetooth
           pageblockadd = 0;
           Mem_SF(0x00);
           blockerasefxn();
@@ -1195,102 +1414,14 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
           }
       }
 
-      //TODO: increase 15 to 40
-      if((AONRTCSecGet() > 15) && (phone == 0)){
+      //TODO: increase 20 to 60
+      if((AONRTCSecGet() > 20) && (phone == 0)){
           phone = 1;
+          //SimpleBLEPeripheral_performPeriodicTask();//This turns off bluetooth
+          //PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+          //Task_sleep((UInt)arg0);
+          //          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
       }
-
-
-//      if(selectedMode == 2){
-//          //DEBUG("DATA COLLECTION");
-//          ICall_signal(sem);
-//      }else if(selectedMode == 3){
-//         // DEBUG("DATA ERASE");
-//          ICall_signal(sem);
-//
-//      }
-
-
-
-
-     /* if(runOnce < 2000 && connected ==1 )//&& valueReceived == 1)
-      {
-          if(runOnce == 0){Task_sleep(150000);}
-          for(int ii =0; ii<126; ii++)
-          {
-              thePayload[ii] = (runOnce % 26) + 0x41;
-          }
-          thePayload[126] = '\r';
-          thePayload[127] = '\n';
-          SPPBLEServer_enqueueUARTMsg(SBP_UART_DATA_EVT, thePayload, 128);
-          //valueReceived = 0;
-          Task_sleep(3000);
-      }else if(runOnce == 2000 && connected ==1)
-      {
-          thePayload[0] = 'E';
-          thePayload[1] = 'n';
-          thePayload[2] = 'd';
-          bStatus_t retVal2 = FAILURE;
-          do
-          {
-              retVal2 = SerialPortService_SetParameter(SERIALPORTSERVICE_CHAR_DATA, 3, thePayload);
-          }while(retVal2 != SUCCESS);
-      }
-      runOnce++;*/
-
-      //esl      // If RTOS queue is not empty, process app message.
-//      if (!Queue_empty(appUARTMsgQueue))
-//      {
-//        //Get the message at the front of the queue but still keep it in the queue
-//        queueRec_t *pRec = Queue_head(appUARTMsgQueue);
-//        sbpUARTEvt_t *pMsg = (sbpUARTEvt_t *)pRec->pData;
-//
-//        if (pMsg && ((gapProfileState == GAPROLE_CONNECTED) || (gapProfileState == GAPROLE_CONNECTED_ADV)))
-//        {
-//            bStatus_t retVal = FAILURE;
-//
-//            switch(pMsg->event)
-//            {
-//              case SBP_UART_DATA_EVT:
-//              {
-//                //Send the notification
-//                retVal = SerialPortService_SetParameter(SERIALPORTSERVICE_CHAR_DATA, pMsg->length, pMsg->pData);
-//
-//                if(retVal != SUCCESS)
-//                {
-//                  //Display_print1(dispHandle, 5, 0, "FC Violated: %d", pMsg->msg.flowCtrlEvt.opcode);
-//                  //Display_print1(dispHandle, 4, 0, " %d", retVal);
-//                }
-//                else
-//                {
-//                  //Increment TX status counter
-//                  SerialPortService_AddStatusTXBytes(pMsg->length);
-//
-//                  //Remove from queue
-//                  Util_dequeueMsg(appUARTMsgQueue);
-//
-//                  //Toggle LED to indicate data received from UART terminal and sent over the air
-//                  //SPPBLEServer_toggleLed(Board_GLED, Board_LED_TOGGLE);
-//
-//                  //Deallocate data payload being transmitted.
-//                  ICall_freeMsg(pMsg->pData);
-//                  // Free the space from the message.
-//                  ICall_free(pMsg);
-//                }
-//
-//                  if(!Queue_empty(appUARTMsgQueue))
-//                  {
-//                    // Wake up the application to flush out any remaining UART data in the queue.
-//                    Semaphore_post(sem);
-//                  }
-//                break;
-//              }
-//            default:
-//              break;
-//          }
-//        }
-//      }
-
 
       // If RTOS queue is not empty, process app message.
       while (!Queue_empty(appMsgQueue))
@@ -1312,40 +1443,18 @@ static void SPPBLEServer_taskFxn(UArg arg0, UArg a1)
 
 
 
-   /* if (events & SBP_PERIODIC_EVT)
+    if (events & SBP_PERIODIC_EVT)
     {
       events &= ~SBP_PERIODIC_EVT;
 
       Util_startClock(&periodicClock);
 
       // Perform periodic application task
-      //SPPBLEServer_performPeriodicTask();
-    }*/
+      SPPBLEServer_performPeriodicTask();
+    }
 
     ICall_signal(sem);
 
-/*//esl2
-    //ADD NEW STUFF
-#ifdef FEATURE_OAD
-    while (!Queue_empty(hOadQ))
-    {
-      oadTargetWrite_t *oadWriteEvt = Queue_dequeue(hOadQ);
-
-      // Identify new image.
-      if (oadWriteEvt->event == OAD_WRITE_IDENTIFY_REQ)
-      {
-        OAD_imgIdentifyWrite(oadWriteEvt->connHandle, oadWriteEvt->pData);
-      }
-      // Write a next block request.
-      else if (oadWriteEvt->event == OAD_WRITE_BLOCK_REQ)
-      {
-        OAD_imgBlockWrite(oadWriteEvt->connHandle, oadWriteEvt->pData);
-      }
-
-      // Free buffer.
-      ICall_free(oadWriteEvt);
-    }
-#endif //FEATURE_OAD*/
   }
 }
 
@@ -1672,18 +1781,21 @@ static void SPPBLEServer_processStateChangeEvt(gaprole_States_t newState)
         GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, connectedAddr);
         //Checks the address of client
         if(connectedAddr[0] == retrievalAddress[0] && connectedAddr[1] == retrievalAddress[1] && connectedAddr[2] == retrievalAddress[2] && connectedAddr[3] == retrievalAddress[3] && connectedAddr[4] == retrievalAddress[4] && connectedAddr[5] == retrievalAddress[5])
+       // if(connectedAddr[0] == 0x81 && connectedAddr[1] == 0xD7 && connectedAddr[2] == 0x7E && connectedAddr[3] == 0xAB && connectedAddr[4] == 0x78 && connectedAddr[5] == 0xCC)
         {
-          //Data retrieval
           phone = 2;
+          //TODO: erase to reduce confusion
+          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
           pageblockadd = 0;
 
           //DEBUG("LAUNCHPAD CONNECTED");
+        //}else if(connectedAddr[0] == 0x80 && connectedAddr[1] == 0xEF && connectedAddr[2] == 0x7E && connectedAddr[3] == 0xAB && connectedAddr[4] == 0x78 && connectedAddr[5] == 0xCC){
         }else if(connectedAddr[0] == eraseAddress[0] && connectedAddr[1] == eraseAddress[1] && connectedAddr[2] == eraseAddress[2] && connectedAddr[3] == eraseAddress[3] && connectedAddr[4] == eraseAddress[4] && connectedAddr[5] == eraseAddress[5]){
-          //Erase
+
           phone = 3;
           //DEBUG("PHONE CONNECTED");
         }else{
-            Turn_Off_BLE();//This turns off bluetooth
+            SimpleBLEPeripheral_performPeriodicTask();//This turns off bluetooth
             while(1){
                 PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
                 Task_sleep((1000000 / Clock_tickPeriod)>>1);
@@ -2052,33 +2164,7 @@ char* convInt32ToText(int32 value) {
 }
 
 
-/*********************************************************************
-*********************************************************************/
 
-/*114void DataTransferSession()
-{
-    bStatus_t ret;
-    //wait for request
-    uint8_t value = 0;
-    while(1)
-    {
-        ret = DataTransferService_GetParameter(DATATRANSFERSERVICE_REQUEST, &value);
-        if(ret == SUCCESS)
-        {
-            if(value == 1){
-                selectedMode = 1;
-                return;
-            }else if(value ==2){
-                selectedMode = 2;
-                return; //Req turned non-zero by host, so begin
-            }else if(value ==3){
-                selectedMode = 3;
-                return; //Req turned non-zero by host, so begin
-            }
-        }
-    }
-
-}*/
 
 void EndOfTransmission(void){
     uint8_t theEnd[] = "END OF TRANSMISSION\r\n";
@@ -2095,7 +2181,6 @@ void EndOfTransmission(void){
 //Initialize SPI
 void SPI_params_init(){
 
-    CS_init();
 
     SPI_Params_init(&spiParams);
     spiParams.transferMode = SPI_MODE_BLOCKING;
@@ -2147,13 +2232,13 @@ int readfromapage(UArg arg0){
            EndOfTransmission();
            //DEBUG("ENDOFTRANSMISSION");
            while(1){
-               Turn_Off_BLE();
+               SimpleBLEPeripheral_performPeriodicTask();
                PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-               Task_sleep((UInt)arg0>>1);
+               Task_sleep((UInt)arg0);
                PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-               Task_sleep((UInt)arg0>>1);
+               Task_sleep((UInt)arg0);
                PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-               Task_sleep((UInt)arg0>>1);
+               Task_sleep((UInt)arg0);
                PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
                Task_sleep((UInt)arg0*2);
            }
@@ -2164,6 +2249,25 @@ int readfromapage(UArg arg0){
        }
 }
 
+
+
+void Mem_ID(){
+    uint8_t CMD_ID[4] = {0x9F, 0x00, 0x00, 0x00 };
+    uint8_t Data[4];
+    Bool TransferOK;
+    spiTransaction.arg = NULL;
+    spiTransaction.count = 4;
+    spiTransaction.txBuf = CMD_ID;
+    spiTransaction.rxBuf = Data;
+
+    CS_LOW();
+    TransferOK = SPI_transfer(spi, &spiTransaction);
+    CS_HIGH();
+
+    MEMID[0] = Data[2];
+    MEMID[1] = Data[3];
+
+}
 
 //Memory Read
 int Mem_RtC(){
@@ -2288,6 +2392,35 @@ void CS_HIGH(){
 }
 
 
+void save(){
+    if(pageblockadd > STORAGE_MAX_ADDRESS){
+      while(1){
+          PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
+          Task_sleep(1000000 / Clock_tickPeriod);
+          PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
+          Task_sleep(1000000 / Clock_tickPeriod);
+      }
+    }
+
+    int resultval;
+    int ifbusybit;
+
+    Mem_PP(); //Program
+
+    resultval = Mem_GF();    //Check status register
+    //PROGRAM EXECUTE, PAGE READ, READ PAGE CACHE LAST, BLOCK ERASE, READ PAGE CACHE RANDOM bit can be checked
+    ifbusybit = (resultval&1);
+
+    while(ifbusybit){        //Stay in the while loop until the execution is done
+        resultval = Mem_GF();
+        ifbusybit = (resultval&1);
+    }
+    //Mem_lock();
+    pageblockadd = pageblockadd + 0x00000001;
+    //savelastpageadd();  //saves the next page address to be written in non-volatile storage
+
+}
+
 void savetoapage(UArg arg0){
 
     if(pageblockadd > STORAGE_MAX_ADDRESS){
@@ -2300,8 +2433,8 @@ void savetoapage(UArg arg0){
     }
 
     //TODO: remove led blinking
-    //PIN_setOutputValue(ledPinHandle, LED_PIN, tempval);
-    //tempval ^= 1;
+//    PIN_setOutputValue(ledPinHandle, LED_PIN, tempval);
+//    tempval ^= 1;
 
     int resultval;
     int ifbusybit;
@@ -2310,7 +2443,7 @@ void savetoapage(UArg arg0){
 //        blockerasefxn();
 //    }
 
-   Mem_PP(); //Program
+    Mem_PP(); //Program
 
     resultval = Mem_GF();    //Check status register
     //PROGRAM EXECUTE, PAGE READ, READ PAGE CACHE LAST, BLOCK ERASE, READ PAGE CACHE RANDOM bit can be checked
@@ -2323,7 +2456,11 @@ void savetoapage(UArg arg0){
     //Mem_lock();
 
     pageblockadd = pageblockadd + 0x00000001;
+
+
     savelastpageadd();  //saves the next page address to be written in non-volatile storage
+
+
     //PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
 
 
@@ -2458,6 +2595,9 @@ void blockerasefxn(){
         if(countapage == 64){
             countapage = 0;
         }
+
+        PIN_setOutputValue(ledPinHandle, LED_PIN, tempval);
+        tempval ^= 1;
         pageblockadd = pageblockadd + 0x00000001;
     }
     pageblockadd  = 0x00000000;
@@ -2529,35 +2669,101 @@ void scTaskAlertCallback(void)
 } // scTaskAlertCallback
 
 
-void processTaskAlert(UArg arg0)
+void processTaskAlert(void)
 {
     // Clear the ALERT interrupt source
     scifClearAlertIntSource();
 
-    memcpy(&passArray[numSCBuf*292], &scifTaskData.i2cimupressurewarray1111.output.result[0], 284);
-    passArray[(numSCBuf+1)*292-8] = sec >> 24;
-    passArray[(numSCBuf+1)*292-7] = sec >> 16;
-    passArray[(numSCBuf+1)*292-6] = sec >> 8;
-    passArray[(numSCBuf+1)*292-5] = sec;
-    passArray[(numSCBuf+1)*292-4] = frac >> 24;
-    passArray[(numSCBuf+1)*292-3] = frac >> 16;
-    passArray[(numSCBuf+1)*292-2] = frac >> 8;
-    passArray[(numSCBuf+1)*292-1] = frac;
-    numSCBuf++;
-    if(numSCBuf >= 7){
-        numSCBuf = 0;
-        savetoapage(arg0);
+    /*
+    switch(gpsget){
+        case 0:
+            GPSfix();
+            memcpy(&passArray[numBuffer], &GPGGAinput[0], 65);
+            numBuffer = numBuffer + 65;
+            gpsget = 1;
+            break;
+        case 1:
+            PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
+            gpsget = 0;
+            break;
+        default:
+            break;
     }
 
-    //mem_fin(288);
+    */
+    // Do SC Task processing here
+   // memcpy(&passArray[numBuffer], &scifTaskData.i2cimupressurewarray1111.output.result[0], 284);
+   // numBuffer = numBuffer + 284;
 
+//    if (numBuffer > 1800){
+//        save();
+//        numBuffer = 0;
+//    }
     // Acknowledge the ALERT event
     scifAckAlertEvents();
-    //scifReinitTaskIo(BV(SCIF_I2CIMUPRESSUREWARRAY_TASK_ID));
-
 } // processTaskAlert
 
-static void Turn_Off_BLE(void)
+
+//void processTaskAlert(UArg arg0)
+//{
+//    // Clear the ALERT interrupt source
+//    scifClearAlertIntSource();
+//
+//    if(gps_check == 0){
+//        //TODO: 828
+//        //GPSfix();
+//        memcpy(&passArray[numBuffer], &GPGGAinput[0], 65);
+//        numBuffer = numBuffer + 65;
+//        //GPScollect(arg0);
+////        memcpy(&passArray[numSCBuf], &GPGGAinput[0], 65);
+////        numSCBuf = numSCBuf + 65;
+//        gps_check = 1;
+//    }else if(gps_check == 1){
+//        gps_check = 0;
+//    }
+//    //GPScollect(arg0);
+//
+//
+//    memcpy(&passArray[numBuffer], &scifTaskData.i2cimupressurewarray1111.output.result[0], 284);
+//    numBuffer = numBuffer + 284;
+//    passArray[numBuffer] = sec >> 24;
+//    passArray[numBuffer+1] = sec >> 16;
+//    passArray[numBuffer+2] = sec >> 8;
+//    passArray[numBuffer+3] = sec;
+//    passArray[numBuffer+4] = frac >> 24;
+//    passArray[numBuffer+5] = frac >> 16;
+//    passArray[numBuffer+6] = frac >> 8;
+//    passArray[numBuffer+7] = frac;
+//    numBuffer = numBuffer + 8;
+//    if(numBuffer >= 1700){
+//        numBuffer = 0;
+//        savetoapage(arg0);
+//    }
+//
+////    memcpy(&passArray[numSCBuf*292], &scifTaskData.i2cimupressurewarray1111.output.result[0], 284);
+////    passArray[(numSCBuf+1)*292-8] = sec >> 24;
+////    passArray[(numSCBuf+1)*292-7] = sec >> 16;
+////    passArray[(numSCBuf+1)*292-6] = sec >> 8;
+////    passArray[(numSCBuf+1)*292-5] = sec;
+////    passArray[(numSCBuf+1)*292-4] = frac >> 24;
+////    passArray[(numSCBuf+1)*292-3] = frac >> 16;
+////    passArray[(numSCBuf+1)*292-2] = frac >> 8;
+////    passArray[(numSCBuf+1)*292-1] = frac;
+////    numSCBuf++;
+////    if(numSCBuf >= 7){
+////        numSCBuf = 0;
+////        savetoapage(arg0);
+////    }
+//
+//    //mem_fin(288);
+//
+//    // Acknowledge the ALERT event
+//    scifAckAlertEvents();
+//    //scifReinitTaskIo(BV(SCIF_I2CIMUPRESSUREWARRAY_TASK_ID));
+//
+//} // processTaskAlert
+
+static void SimpleBLEPeripheral_performPeriodicTask(void)
 {
   //turn off advertising
    // Setup the GAP Peripheral Role Profile
@@ -2605,13 +2811,12 @@ static void Turn_Off_BLE(void)
 
 
 void getlastpageadd(){
-    //Uncomment this line for the first time to save 000000 as the last page written, then comment it back
-    //savelastpageadd();
+   // savelastpageadd();
     uint8_t nv_status = NV_OPER_FAILED;
 
-  do{
+   do{
         nv_status = osal_snv_read(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
-  }while(nv_status != SUCCESS);
+   }while(nv_status != SUCCESS);
 
     pageblockadd = buf[0] +  (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
 }
@@ -2630,273 +2835,161 @@ void savelastpageadd(){
     }while(nv_status != SUCCESS);
 }
 
-void GPSinit(UArg arg0){
+void GPS_uart(){
+    paramsUART.readMode = UART_MODE_BLOCKING;
+    paramsUART.writeMode = UART_MODE_BLOCKING;
+    paramsUART.readReturnMode = UART_RETURN_FULL;
+    paramsUART.baudRate = 4800;
+    uartHandle = UART_open(Board_UART, &paramsUART);
 
-    CPUdelay(8000*50);
-    //Task_sleep((UInt)arg0*20);
-    PIN_setOutputValue(ongpsPinHandle, ONGPS,!PIN_getOutputValue(ONGPS));
-    CPUdelay(8000*50);//Task_sleep((UInt)arg0);
-
-    if(PIN_getOutputValue(ONGPS)){
-        //PIN_setOutputValue(ongpsPinHandle, ONGPS,!PIN_getOutputValue(ONGPS));
-        CPUdelay(8000*50);
-        //Task_sleep((UInt)arg0);
-    }else{
-        PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
-        CPUdelay(8000*50);
-        //Task_sleep((UInt)arg0);
+    if (uartHandle == NULL) {
+         uartHandle++;
     }
-
-    CPUdelay(8000*500);
-
-    //falling
-    if(PIN_getOutputValue(ONGPS)){
-        PIN_setOutputValue(ongpsPinHandle, ONGPS,!PIN_getOutputValue(ONGPS));
-        CPUdelay(8000*50);
-        //Task_sleep((UInt)arg0);
-    }else{
-        PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
-        CPUdelay(8000*50);
-        //Task_sleep((UInt)arg0);
-    }
-
-    CPUdelay(8000*500);
-    PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
-    CPUdelay(8000*100);
-    //Task_sleep((UInt)arg0);
-    PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
-    CPUdelay(8000*50);
-    //Task_sleep((UInt)arg0);
-    CPUdelay(8000*500);
-
-    PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
-    CPUdelay(8000*100);
-    //Task_sleep((UInt)arg0);
-    PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
-    CPUdelay(8000*50);
-    //Task_sleep((UInt)arg0);
-    CPUdelay(8000*500);
 
 }
 
-void GPS_UART_init()
-{
-    /* Create a UART with data processing off. */
-    UART_Params_init(&uartParams);
-    uartParams.writeDataMode = UART_DATA_BINARY;
-    uartParams.readDataMode = UART_DATA_BINARY;
-    uartParams.readReturnMode = UART_RETURN_FULL;
-    uartParams.readEcho = UART_ECHO_OFF;
-    uartParams.baudRate = 4800;
-
-    uart = UART_open(Board_UART0, &uartParams);
-    while(uart == NULL)
-    {
-        uart = UART_open(Board_UART0, &uartParams);
+void GPSFIX(){
+    gps_break = 0;
+    gpsturnon = 0;
+    n = 0;
+    while(gps_break < 200){
+        UART_read(uartHandle, &input, 1);
+        if (input == 'G'){
+            UART_read(uartHandle, &input, 1);
+            if (input == 'P'){
+                UART_read(uartHandle, &input, 1);
+                if (input == 'G'){
+                    UART_read(uartHandle, &input, 1);
+                    if (input == 'G'){
+                        UART_read(uartHandle, &input, 1);
+                        if (input == 'A'){
+                            UART_read(uartHandle, &passArray[n], 1);
+                            if (passArray[n] == ','){
+                                int test = 0;
+                                while(test <1){
+                                    n = n + 1;
+                                    UART_read(uartHandle, &passArray[n] ,1);
+                                    if (passArray[n] == ','){
+                                        while(test < 1){
+                                            n = n + 1;
+                                            UART_read(uartHandle, &passArray[n], 1);
+                                            if (passArray[n] == ','){
+                                                while(test<1){
+                                                    n = n + 1;
+                                                    UART_read(uartHandle, &passArray[n], 1);
+                                                    if (passArray[n] == ','){
+                                                        while(test<1){
+                                                            n = n + 1;
+                                                            UART_read(uartHandle, &passArray[n], 1);
+                                                            if (passArray[n] == ','){
+                                                                while(test<1){
+                                                                    n = n + 1;
+                                                                    UART_read(uartHandle, &passArray[n], 1);
+                                                                    if (passArray[n] == ','){
+                                                                        n = n +1;
+                                                                        UART_read(uartHandle,&passArray[n],20);
+                                                                        if (passArray[n]=='1'){
+                                                                            n = n + 300;
+                                                                            //savetoapage(arg0);
+                                                                            PIN_setOutputValue(ledPinHandle, LED_PIN,1);
+                                                                        }else{
+                                                                            PIN_setOutputValue(ledPinHandle, LED_PIN,!PIN_getOutputValue(LED_PIN));
+                                                                        }
+                                                                        gps_break  = 300;
+                                                                        test = 2;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+int count = 0;
+int gpsSWITCH = 0;
+void GPSSWITCH(int ONOFF){
+    input = '0';
+    count = 0;
+    gpsSWITCH = 0;
+    while(count < 20){
+        UART_read(uartHandle, &input, 1);
+        count++;
+        if(input == ','){
+            gpsSWITCH = 1;
+            count = 100;
+        }
+    }
+    if (ONOFF){
+        if(gpsSWITCH == 0){
+            GPSONOFF();
+        }
+    }else{
+        if(gpsSWITCH == 1){
+            GPSONOFF();
+//            int off = 0;
+//            while(off <1){
+//                UART_read(uartHandle,&GPGGAinput,50);
+//            }
+//                UART_read(uartHandle, &input,1);
+//                if(input == '$'){
+//                    UART_read(uartHandle, &input, 1);
+//                    if(input == 'P'){
+//                        UART_read(uartHandle,&GPGGAinput,20);
+//                        off = 1;
+//                    }
+//                }
+//            }
+        }
+    }
+//            int off = 0;
+//            while(off < 700){
+//                UART_read(uartHandle, &GPGGAinput, 50);
 
-//void GPScollect()
-//{
-//    /*uint8_t hours;
-//    uint8_t minutes;
-//    uint8_t seconds;
-//    int8_t lattitude_degrees; //North is + and South is -
-//    uint8_t lattitude_minutes;
-//    uint16_t lattitude_fraction;
-//    int16_t longitude_degrees; //East is + and West is -
-//    uint8_t longitude_minutes;
-//    uint16_t longitude_fraction;*/
-//
-//    if(gpsfirst == 0){
-//            CPUdelay(8000*50);
-//            //Task_sleep((UInt)arg0*20);
-//            PIN_setOutputValue(ongpsPinHandle, ONGPS,!PIN_getOutputValue(ONGPS));
-//            CPUdelay(8000*50);//Task_sleep((UInt)arg0);
-//
-//            if(PIN_getOutputValue(ONGPS)){
-//                //PIN_setOutputValue(ongpsPinHandle, ONGPS,!PIN_getOutputValue(ONGPS));
-//                CPUdelay(8000*50);
-//                //Task_sleep((UInt)arg0);
-//            }else{
-//                PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
-//                CPUdelay(8000*50);
-//                //Task_sleep((UInt)arg0);
+//                if (input == '$'){
+//                    UART_read(uartHandle, &input, 1);
+//                    if(input =='P'){
+//                        UART_read(uartHandle, &input, 1);
+//                        if(input == 'S'){
+//                            UART_read(uartHandle, &input, 1);
+//                            if (input =='R'){
+//                                off = 900;
+//                            }
+//                        }
+//                    }
+//                }
 //            }
-//
-//            CPUdelay(8000*500);
-//
-//            //falling
-//            if(PIN_getOutputValue(ONGPS)){
-//                PIN_setOutputValue(ongpsPinHandle, ONGPS,!PIN_getOutputValue(ONGPS));
-//                CPUdelay(8000*50);
-//                //Task_sleep((UInt)arg0);
-//            }else{
-//                PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
-//                CPUdelay(8000*50);
-//                //Task_sleep((UInt)arg0);
-//            }
-//
-//            CPUdelay(8000*500);
-//            PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
-//            CPUdelay(8000*100);
-//            //Task_sleep((UInt)arg0);
-//            PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
-//            CPUdelay(8000*50);
-//            //Task_sleep((UInt)arg0);
-//            CPUdelay(8000*500);
-//
-//            PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
-//            CPUdelay(8000*100);
-//            //Task_sleep((UInt)arg0);
-//            PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
-//            CPUdelay(8000*50);
-//            //Task_sleep((UInt)arg0);
-//            CPUdelay(8000*500);
-//
-//            /* Create a UART with data processing off. */
-//            UART_Params_init(&uartParams);
-//            uartParams.writeDataMode = UART_DATA_BINARY;
-//            uartParams.readDataMode = UART_DATA_BINARY;
-//            uartParams.readReturnMode = UART_RETURN_FULL;
-//            uartParams.readEcho = UART_ECHO_OFF;
-//            uartParams.baudRate = 4800;
-//            uart = UART_open(Board_UART0, &uartParams);
-//
-//            if (uart == NULL) {
-//               uart++;
-//            }
-//
-//            gpsfirst = 1;
-//        }
-//    gpstimeout = 0;
-//    uint32_t GPS_start_time = 0;//AONRTCFractionGet();
-//    uint32_t GPS_run_time;
-//    uint32_t max_run_time = 2147483648 >> 1;
-//
-//    while(gpstimeout != 1)
-//    {
-//        UART_read(uart, &input, 1);
-//        if(input == 'G')
-//        {
-//           UART_read(uart, &GPGGAinput, 5);
-//           if(GPGGAinput[0] == 'P' && GPGGAinput[1] == 'G' && GPGGAinput[2] == 'G' && GPGGAinput[3] == 'A' && GPGGAinput[4] == ',')
-//           {
-//               UART_read(uart, &GPGGAinput, 65);
-//               /*uint8_t tempString[4];
-//               tempString[0] = GPGGAinput[0];
-//               tempString[1] = GPGGAinput[1];
-//               tempString[2] = 0;
-//               hours = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[2];
-//               tempString[1] = GPGGAinput[3];
-//               tempString[2] = 0;
-//               minutes = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[4];
-//               tempString[1] = GPGGAinput[5];
-//               tempString[2] = 0;
-//               seconds = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[7];
-//               tempString[1] = GPGGAinput[8];
-//               tempString[2] = 0;
-//               lattitude_degrees = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[9];
-//               tempString[1] = GPGGAinput[10];
-//               tempString[2] = 0;
-//               lattitude_minutes = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[12];
-//               tempString[1] = GPGGAinput[13];
-//               tempString[2] = GPGGAinput[14];
-//               tempString[3] = 0;
-//               lattitude_fraction = atoi(tempString);
-//
-//               if(GPGGAinput[16] == 'S')
-//               {
-//                   lattitude_degrees *= -1;
-//               }
-//
-//               tempString[0] = GPGGAinput[18];
-//               tempString[1] = GPGGAinput[19];
-//               tempString[2] = GPGGAinput[20];
-//               tempString[3] = 0;
-//               longitude_degrees = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[21];
-//               tempString[1] = GPGGAinput[22];
-//               tempString[2] = 0;
-//               longitude_minutes = atoi(tempString);
-//
-//               tempString[0] = GPGGAinput[24];
-//               tempString[1] = GPGGAinput[25];
-//               tempString[2] = GPGGAinput[26];
-//               tempString[3] = 0;
-//               longitude_fraction = atoi(tempString);
-//
-//               if(GPGGAinput[28] == 'W')
-//               {
-//                   longitude_degrees *= -1;
-//               }*/
-//
-//               uint8_t numFields = 0;
-//               uint8_t endFirstBlock = 0;
-//               uint8_t beginSecondBlock = 0;
-//               uint8_t endSecondBlock = 0;
-//               uint8_t dataValid = 0;
-//
-//               for(int u = 0 ; u<65; u++)
-//               {
-//                   if(GPGGAinput[u] == ',')
-//                   {
-//                       numFields++;
-//                       if(numFields == 5)
-//                       {
-//                           endFirstBlock = u;
-//                           if(GPGGAinput[u+1] == '1')
-//                           {
-//                               dataValid = 1;
-//                           }else{
-//                               break;
-//                           }
-//                       }
-//                       if(numFields == 8)
-//                       {
-//                           beginSecondBlock = u+1;
-//                       }
-//                       if(numFields == 12)
-//                       {
-//                           endSecondBlock = u-1;
-//                       }
-//                   }
-//               }
-//               if(dataValid == 1)
-//               {
-//                   memcpy(&GPS_data, &GPGGAinput, endFirstBlock+1);
-//                   memcpy(&GPS_data + endFirstBlock + 1, &GPGGAinput + beginSecondBlock, (endSecondBlock-beginSecondBlock)+1);
-//               }
-//           }
-//        }
-//
-//        //Check if we've ran out of time
-//        if(GPS_start_time < 2147483648){
-//            GPS_run_time = AONRTCFractionGet() - GPS_start_time;
-//        }else{
-//            uint32_t tempTime = AONRTCFractionGet();
-//            if(tempTime > 2147483648){
-//                GPS_run_time = tempTime - GPS_start_time;
-//            }else{
-//                GPS_run_time = tempTime + (4294967295 - GPS_start_time);
-//            }
-//        }
-//        if(GPS_run_time > max_run_time){
-//            gpstimeout = 1;
 //        }
 //    }
-//}
+//    if(ONOFF && (!gpsSWITCH)){ //TURNON & OFF
+//        GPSONOFF();
+//    }
+//    if((!ONOFF) && (gpsSWITCH)){ //TURNOFF & ON
+//        GPSONOFF();
+//    }
+}
+
+
+void GPSONOFF(){
+
+    PIN_setOutputValue(ongpsPinHandle, ONGPS,1);
+    CPUdelay(8000*1000);
+    //Task_sleep((UInt)arg0);
+    PIN_setOutputValue(ongpsPinHandle, ONGPS,0);
+    CPUdelay(8000*50);
+    //Task_sleep((UInt)arg0);
+    CPUdelay(8000*500);
+}
+
 
 
 void GPScollect(UArg arg0){
@@ -2948,17 +3041,64 @@ void GPScollect(UArg arg0){
         //Task_sleep((UInt)arg0);
         CPUdelay(8000*500);
 
-        /* Create a UART with data processing off. */
-        UART_Params_init(&uartParams);
+        // Create a UART with data processing off.
+       /* UART_Params_init(&uartParams);
         uartParams.writeDataMode = UART_DATA_BINARY;
         uartParams.readDataMode = UART_DATA_BINARY;
         uartParams.readReturnMode = UART_RETURN_FULL;
         uartParams.readEcho = UART_ECHO_OFF;
         uartParams.baudRate = 4800;
-        uart = UART_open(Board_UART0, &uartParams);
+        uart = UART_open(Board_UART0, &uartParams);*/
 
-        if (uart == NULL) {
-           uart++;
+
+//        paramsUART.readTimeout = UART_WAIT_FOREVER;
+//        paramsUART.writeTimeout = UART_WAIT_FOREVER;
+//        paramsUART.readCallback = NULL;
+//        paramsUART.writeCallback = NULL;
+        //readReturnMode = UART_RETURN_NEWLINE;
+        //readDataMode = UART_DATA_TEXT;
+        //writeDataMode = UART_DATA_TEXT;
+        //readEcho = UART_ECHO_ON;
+        //baudRate = 115200;
+//        paramsUART.dataLength = UART_LEN_8;
+//        paramsUART.stopBits = UART_STOP_ONE;
+//        paramsUART.parityType = UART_PAR_NONE;
+
+
+//        paramsUART.writeDataMode = UART_DATA_BINARY;
+//        paramsUART.readDataMode = UART_DATA_BINARY;
+        //        paramsUART.readEcho = UART_ECHO_OFF;
+        UART_Params_init(&paramsUART);
+        paramsUART.readMode = UART_MODE_BLOCKING;
+        paramsUART.writeMode = UART_MODE_BLOCKING;
+        paramsUART.readReturnMode = UART_RETURN_FULL;
+        paramsUART.baudRate = 4800;
+        uartHandle = UART_open(Board_UART, &paramsUART);
+//        UART_close(uartHandle);
+//        uartHandle = UART_open(Board_UART0, &paramsUART);
+        //Board_initUART();
+
+    /*    UART_Params_init(&paramsUART);
+
+        paramsUART.readMode = UART_MODE_BLOCKING;
+        paramsUART.writeMode =  UART_MODE_BLOCKING;
+        paramsUART.readCallback = NULL;
+        paramsUART.writeCallback = NULL;
+        paramsUART.readReturnMode = UART_RETURN_FULL;
+        paramsUART.writeDataMode = UART_DATA_BINARY;
+        paramsUART.readDataMode = UART_DATA_BINARY;
+        paramsUART.readEcho = UART_ECHO_OFF;
+//        paramsUART.readTimeout = 0;
+//        paramsUART.writeTimeout = 0;
+        paramsUART.baudRate = 4800;
+        paramsUART.stopBits = UART_STOP_ONE;
+        paramsUART.parityType = UART_PAR_NONE;
+        paramsUART.dataLength = UART_LEN_8;
+
+        uart = UART_open(Board_UART0, &paramsUART);*/
+
+        if (uartHandle == NULL) {
+            uartHandle++;
         }
 
         gpsfirst = 1;
@@ -2970,108 +3110,117 @@ void GPScollect(UArg arg0){
     int gpstimeout = 0;
     int gpswhile = 0;
 
-    /* Loop forever echoing */
-    while((gpswhile < 1)  &&  (gpstimeout<5))
+
+    while(gpswhile < 1)
     {
 
-        UART_read(uart, &input, 1);
-        PIN_setOutputValue(ledPinHandle, LED_PIN, 1);
-        Task_sleep((UInt)arg0);
-        PIN_setOutputValue(ledPinHandle, LED_PIN, 0);
-        Task_sleep((UInt)arg0);
-        /*result[i] = input;
-        i++;
-        if(i>299)
-        {
-            i = 0;
-        }*/
+        UART_read(uartHandle, &input, 1);
+
         if(input == 'G')
         {
             //result[0] = input;
-            UART_read(uart, &input, 1);
+            UART_read(uartHandle, &input, 1);
             if(input == 'P')
             {
                 //result[1] = input;
-                UART_read(uart, &input, 1);
+                UART_read(uartHandle, &input, 1);
                 if(input == 'G')
                 {
                     //result[2] = input;
-                    UART_read(uart, &input, 1);
+                    UART_read(uartHandle, &input, 1);
                     if(input == 'G')
                     {
                         //result[3] = input;
-                        UART_read(uart, &input, 1);
+                        UART_read(uartHandle, &input, 1);
                         if(input == 'A')
                         {
+
+                            //PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
+
                             //result[4] = input;
-                            UART_read(uart, &GPGGAinput, 60);
-                            UART_read(uart, &input, 1);
-
-                            sec  = AONRTCSecGet();
-                            frac = AONRTCFractionGet();
-
-                            int u;
-                            for(u =0 ; u<60; u++)
-                            {
-                                if(GPGGAinput[u] == 'M')
-                                {
-                                    if(GPGGAinput[u-1] == ',')
-                                    {
-                                        if(GPGGAinput[u+1] == ',')
-                                        {
-                                            mloc = u;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            int y;
-                            int comma = 0;
-                            for(y = mloc; y>0; y--)
-                            {
-                                if(GPGGAinput[y] == ',')
-                                {
-                                    comma = comma +1;
-                                }
-                                if(comma == 4)
-                                {
-                                    mloc = y-1;
-
-                                    break;
-                                }
-                            }
-
-                            if(GPGGAinput[mloc]=='1')
-                            {
-                                int g;
-                                for(g=0; g<mloc; g++)
-                                {
-                                    passArray[g] = GPGGAinput[g];
-                                }
-
-                                gpswhile = gpswhile + 1;
-                                //PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
-                                //Task_sleep(500);
-                                //PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
-                                PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
-                                Task_sleep(500);
-                                PIN_setOutputValue(ledPinHandle, LED_PIN, !PIN_getOutputValue(LED_PIN));
-                                savetoapage(arg0);
-
-                                passArray[mloc] = sec >> 8;
-                                passArray[mloc+1] = sec;
-                                passArray[mloc+2] = frac >> 8;
-                                passArray[mloc+3] = frac;
-
-                            }
-
+                            UART_read(uartHandle, &GPGGAinput, 30);
+                            gpswhile = 3;
                         }
                     }
                 }
             }
         }
-
     }
-
 }
 
+uint8_t PressureCRC4() {
+    uint16_t n_rem = 0;
+
+    n_prom[0] = ((n_prom[0]) & 0x0FFF);
+    n_prom[7] = 0;
+
+    for ( uint8_t i = 0 ; i < 16; i++ ) {
+        if ( i%2 == 1 ) {
+            n_rem ^= (uint16_t)((n_prom[i>>1]) & 0x00FF);
+        } else {
+            n_rem ^= (uint16_t)(n_prom[i>>1] >> 8);
+        }
+        for ( uint8_t n_bit = 8 ; n_bit > 0 ; n_bit-- ) {
+            if ( n_rem & 0x8000 ) {
+                n_rem = (n_rem << 1) ^ 0x3000;
+            } else {
+                n_rem = (n_rem << 1);
+            }
+        }
+    }
+
+    n_rem = ((n_rem >> 12) & 0x000F);
+
+    return n_rem ^ 0x00;
+}
+
+
+
+void Pressurecalculate() {
+    // Given C1-C6 and D1, D2, calculated TEMP and P
+    // Do conversion first and then second order temp compensation
+
+    int32_t dT = 0;
+    int64_t SENS = 0;
+    int64_t OFF = 0;
+    int32_t SENSi = 0;
+    int32_t OFFi = 0;
+    int32_t Ti = 0;
+    int64_t OFF2 = 0;
+    int64_t SENS2 = 0;
+
+    // Terms called
+    dT = D2-n_prom[5]*256l;
+    SENS = n_prom[1]*32768l+((n_prom[3])*dT)/256l;
+    OFF = (n_prom[2])*65536l+((n_prom[4])*dT)/128l;
+    P = (D1*SENS/(2097152l)-OFF)/(8192l);
+
+
+    // Temp conversion
+    TEMP = 2000l+(dT)*n_prom[6]/8388608LL;
+
+    //Second order compensation
+    if((TEMP/100)<20){         //Low temp
+       Ti = (3*(dT)*(dT))/(8589934592LL);
+       OFFi = (3*(TEMP-2000)*(TEMP-2000))/2;
+       SENSi = (5*(TEMP-2000)*(TEMP-2000))/8;
+       if((TEMP/100)<-15){    //Very low temp
+           OFFi = OFFi+7*(TEMP+1500l)*(TEMP+1500l);
+           SENSi = SENSi+4*(TEMP+1500l)*(TEMP+1500l);
+       }
+   }
+   else if((TEMP/100)>=20){    //High temp
+       Ti = 2*(dT*dT)/(137438953472LL);
+       OFFi = (1*(TEMP-2000)*(TEMP-2000))/16;
+       SENSi = 0;
+   }
+
+
+    OFF2 = OFF-OFFi;           //Calculate pressure and temp second order
+    SENS2 = SENS-SENSi;
+
+    TEMP = (TEMP-Ti);
+    P = (((D1*SENS2)/2097152l-OFF2)/8192l)/10;
+    TEMP = TEMP+1 -1;
+
+}
