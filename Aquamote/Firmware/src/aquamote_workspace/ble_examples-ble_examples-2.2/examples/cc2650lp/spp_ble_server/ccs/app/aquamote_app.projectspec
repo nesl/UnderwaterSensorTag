@@ -3,7 +3,7 @@
 <projectSpec>
     <!-- add your your options here -->
     <project
-        name="spp_ble_client_cc2650lp_app"
+        name="aquamote_app"
         device="CC2650F128"
         cgtVersion="5.2.6"
         connection="TIXDS110_Connection.xml"
@@ -68,7 +68,7 @@
         -I${SRC_EX}/profiles/roles/cc26xx
         -I${PROJECT_IMPORT_LOC}/../../../../../src/profiles/serial_port
         -I${PROJECT_IMPORT_LOC}/../../../../../src/profiles/serial_port/cc26xx
-        -I${PROJECT_IMPORT_LOC}/../../../../../src/examples/spp_ble_client/cc26xx/app
+        -I${PROJECT_IMPORT_LOC}/../../../../../src/examples/spp_ble_server/cc26xx/app
         -I${SRC_EX}/target
         -I${SRC_COMMON}/hal/src/inc
         -I${SRC_COMMON}/hal/src/target/_common
@@ -91,7 +91,6 @@
         --library=${ROM}/common_rom_releases/03282014/common_rom.symbols
         --diag_wrap=off
         --unused_section_elimination=on
-        --compress_dwarf=on
         --xml_link_info=${ProjName}_linkInfo.xml
         --diag_suppress=10247-D
         --diag_suppress=16002-D
@@ -128,9 +127,25 @@
         </file>
         <file path="SRC_BLE_CORE/common/cc26xx/board_key.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
         </file>
-        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_client/cc26xx/app/spp_ble_client.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/spp_ble_server.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
         </file>
-        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_client/cc26xx/app/spp_ble_client.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/spp_ble_server.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/sce.lst" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/scif.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/scif.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/scif_framework.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/scif_framework.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/scif_osal_tirtos.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/scif_osal_tirtos.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/aon_rtc.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
         </file>
         <file path="SRC_BLE_CORE/common/cc26xx/util.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Application" createVirtualFolders="true">
         </file>
@@ -194,9 +209,23 @@
         </file>
 
         <!-- Profiles Folder -->
-        <file path="SRC_EX/profiles/roles/cc26xx/central.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        <file path="SRC_EX/profiles/dev_info/cc26xx/devinfoservice.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
         </file>
-        <file path="SRC_EX/profiles/roles/cc26xx/central.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        <file path="SRC_EX/profiles/dev_info/devinfoservice.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="SRC_EX/inc/gatt_profile_uuid.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="SRC_BLE_CORE/host/gatt_uuid.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="SRC_BLE_CORE/inc/gatt_uuid.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="SRC_BLE_CORE/host/gattservapp_util.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="SRC_EX/profiles/roles/cc26xx/peripheral.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="SRC_EX/profiles/roles/cc26xx/peripheral.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        </file>
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/profiles/serial_port/cc26xx/serial_port_service.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
         </file>
         <file path="PROJECT_IMPORT_LOC/../../../../../src/profiles/serial_port/serial_port_service.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
         </file>
@@ -216,7 +245,7 @@
         <!-- Startup Folder -->
         <file path="SRC_BLE_CORE/target/board.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Startup" createVirtualFolders="true">
         </file>
-        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_client/cc26xx/app/main.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Startup" createVirtualFolders="true">
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/examples/spp_ble_server/cc26xx/app/main.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Startup" createVirtualFolders="true">
         </file>
         <file path="TI_BLE_SDK_BASE/examples/cc2650lp/simple_peripheral/iar/config/ccfg_app_ble.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Startup" createVirtualFolders="true">
         </file>
