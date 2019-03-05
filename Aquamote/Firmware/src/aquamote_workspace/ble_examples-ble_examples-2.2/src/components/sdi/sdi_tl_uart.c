@@ -76,7 +76,8 @@
 // globals
 //*****************************************************************************
 //! \brief UART Handle for UART Driver
-static UART_Handle uartHandle;
+//static UART_Handle uartHandle;
+UART_Handle uartHandle;
 
 //! \brief UART ISR Rx Buffer
 static Char isrRxBuf[UART_ISR_BUF_SIZE];

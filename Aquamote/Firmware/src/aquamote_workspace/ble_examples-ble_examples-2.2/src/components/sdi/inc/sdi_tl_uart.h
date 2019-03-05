@@ -99,6 +99,7 @@ typedef void (*sdiTLIncomingEventCBack_t)(uint8_t event, uint8_t *pMsg, uint8_t 
 // globals
 //*****************************************************************************
 extern UART_Params paramsUART;
+extern UART_Handle uartHandle;
 //*****************************************************************************
 // function prototypes
 //*****************************************************************************

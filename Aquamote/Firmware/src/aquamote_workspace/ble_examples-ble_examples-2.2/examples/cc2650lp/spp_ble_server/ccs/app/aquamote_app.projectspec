@@ -225,7 +225,7 @@
         </file>
         <file path="SRC_EX/profiles/roles/cc26xx/peripheral.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
         </file>
-        <file path="PROJECT_IMPORT_LOC/../../../../../src/profiles/serial_port/cc26xx/serial_port_service.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
+        <file path="PROJECT_IMPORT_LOC/../../../../../src/profiles/serial_port/CC26xx/serial_port_service.c" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
         </file>
         <file path="PROJECT_IMPORT_LOC/../../../../../src/profiles/serial_port/serial_port_service.h" openOnCreation="" excludeFromBuild="false" action="link" targetDirectory="Profiles" createVirtualFolders="true">
         </file>
