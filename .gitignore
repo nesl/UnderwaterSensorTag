@@ -31,3 +31,25 @@
 # Debug files
 *.dSYM/
 *.su
+
+# Inherited from TI Repository
+**/Obj/
+**/Exe/
+**/List/
+**/Debug/
+**/Flash/
+**/FlashROM/
+**/FlashOnly*/
+**/configPkg/
+**/settings
+**/config/src
+*.dep
+*.log
+*.ewt
+*.tmp
+*.bak
+*.pos
+*.pp
+.tags
+.tags_sorted_by_file
+*.bin
