@@ -3,7 +3,7 @@
 <projectSpec>
     <!-- add your your options here -->
     <project
-        name="spp_ble_server_cc2650lp_app"
+        name="server_test_app"
         device="CC2650F128"
         cgtVersion="5.2.6"
         connection="TIXDS110_Connection.xml"
