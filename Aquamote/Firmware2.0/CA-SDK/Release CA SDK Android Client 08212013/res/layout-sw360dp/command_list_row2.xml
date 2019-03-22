@@ -1,0 +1,35 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rowCommandList"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:weightSum="10" >
+
+    <TextView
+        android:id="@+id/tv_command"
+        android:layout_width="0dip"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|left"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_weight="5"
+        android:textColor="#a4a4a4"
+        android:textSize="12sp" >
+    </TextView>
+
+    <Button
+        android:id="@+id/btn_command"
+        android:layout_width="0dip"
+        android:layout_height="30dp"
+        android:text="SEND"
+        android:textSize="11sp"
+        android:scaleX="0.7"
+        android:scaleY="0.6"
+        android:gravity="center"
+        android:textColor="#d6d6d6"
+		android:background="@drawable/command_btn_selector"	
+        android:layout_gravity="center_vertical|right"
+        android:layout_weight="5" />
+
+</LinearLayout>
