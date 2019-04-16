@@ -1,4 +1,4 @@
-from mpulib import computerollandpitch, computeheading, attitudefromCompassGravity, RP_calculate, MadgwickQuaternionUpdate, Euler2Quat, quaternion_to_euler_angle, MPU9250_computeEuler
+from modules.mpulib import computeheading, attitudefromCompassGravity, RP_calculate, MadgwickQuaternionUpdate, Euler2Quat, quaternion_to_euler_angle, MPU9250_computeEuler
 import socket, traceback
 import csv
 import struct
@@ -9,172 +9,129 @@ import pygame.draw
 import pygame.time
 import numpy as np
 from math import sin, cos, acos
-from euclid import Vector3, Quaternion
-from EuclidObjects import Cube, Screen, Grid, PerspectiveScreen
+from modules.euclid import Vector3, Quaternion
+from modules.EuclidObjects import Cube, Screen, Grid, PerspectiveScreen
 
 import math
 
 # from pygame.locals import *
 # from ponycube import *
-from madgwickahrs import *
-import quaternion
-from quaternion import QuaternionClass
-from a3muse import androidAccMag2Euler, qnormalized, quatNormalized, IntegrationRK4, EulerToQuat, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat, AccMag2Euler
+from modules.madgwickahrs import *
+import modules.quaternion
+from modules.quaternion import QuaternionClass
+from modules.a3muse import androidAccMag2Euler, qnormalized, quatNormalized, IntegrationRK4, EulerToQuat, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat, AccMag2Euler
 from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
 # import euclid
 
 
+
 import serial 
-ser = serial.Serial('/dev/tty.usbmodem1441')
+ser = serial.Serial('/dev/tty.usbmodem14411')
 ser.baudrate = 115200
 ser.timeout = 3
 prev_time = 0 
 
-
-# offset_mx =  -1.42
-# offset_my =  0.3900000000000001
-# offset_mz =  -0.009999999999999787
-
-# scale_mx =  1.1537467700258397
-# scale_my =  0.8885572139303483
-# scale_mz =  0.9922222222222222
-
-# offset_mx =  -0.785
-# offset_my = 0.22499999999999987
-# offset_mz =  -0.07499999999999996
-
-# scale_mx =  1.3461249059443192
-# scale_my =  1.0407213496218732
-# scale_mz =  0.7714532125916344
+filename = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_movement.txt','w')
 
 
 
 # offset_mx = 77.345 
-# offset_my = -13.725 
+# offset_my = -13.725
 # offset_mz = -71.64
 
 # scale_mx = 1.1
 # scale_my = 1.13
 # scale_mz = 0.827
 
-# offset_mx =  0.0
-# offset_my =  0.0
-# offset_mz =  0.0
 
-# scale_mx =  1.0
-# scale_my =  1.0
-# scale_mz =  1.0
+# LAB 
+offset_mx =  71.12
+offset_my =  -30.385
+offset_mz =  -66.24
+scale_mx =  1.210645853980839
+scale_my =  1.1778152745972439
+scale_mz =  0.7547368963031613
 
-# offset_mx =  78.995
-# offset_my =  -36.834999999999994
-# offset_mz =  -63.09
-# scale_mx =  1.0106941320389882
-# scale_my =  1.0106941320389882
-# scale_mz =  0.9792765924906324
-
-
-# # Kitchen area 
-# offset_mx =  71.72
-# offset_my =  -32.185
-# offset_mz =  -67.89
-# scale_mx =  1.1444874127995146
-# scale_my =  1.1425381325460808
-# scale_mz =  0.7993591780531722
-
-# Lab next to Tianwei's desktop
-offset_mx =  71.195
-offset_my =  -14.104999999999997
-offset_mz =  -52.065
-scale_mx =  1.2081367686786824
-scale_my =  0.8622694178249733
-scale_mz =  0.9876067108342398
 
 
 dt = 1/10
 
-pygame.init()
-screen = Screen(1600,400,scale=1.5)
-cube1 = Cube(40,30,60)
-cube2 = Cube(40,30,60)
-cube3 = Cube(40,30,60)
-cube4 = Cube(40,30,60)
-cube5 = Cube(40,30,60)
+visualIMU = False
+if visualIMU: 
 
-q1 = Quaternion(1,0,0,0)
-q2 = Quaternion(1,0,0,0)
-q3 = Quaternion(1,0,0,0)
-q4 = Quaternion(1,0,0,0)
-q5 = Quaternion(1,0,0,0)
+	pygame.init()
+	screen = Screen(1600,400,scale=1.5)
+	cube1 = Cube(40,30,60)
+	cube2 = Cube(40,30,60)
+	cube3 = Cube(40,30,60)
+	cube4 = Cube(40,30,60)
+	cube5 = Cube(40,30,60)
 
-p1 = Vector3(-400,0,0)
-p2 = Vector3(-200,0,0)
-p3 = Vector3(0,0,0)
-p4 = Vector3(200,0,0)
-p5 = Vector3(400,0,0)
+	q1 = Quaternion(1,0,0,0)
+	q2 = Quaternion(1,0,0,0)
+	q3 = Quaternion(1,0,0,0)
+	q4 = Quaternion(1,0,0,0)
+	q5 = Quaternion(1,0,0,0)
 
-incr = Quaternion(0.96,0.01,0.01,0).normalized()
-cube1.erase(screen)
-cube1.draw(screen,q1,p1)
+	p1 = Vector3(-400,0,0)
+	p2 = Vector3(-200,0,0)
+	p3 = Vector3(0,0,0)
+	p4 = Vector3(200,0,0)
+	p5 = Vector3(400,0,0)
 
-cube2.erase(screen)
-cube2.draw(screen,q2,p2)
+	incr = Quaternion(0.96,0.01,0.01,0).normalized()
+	cube1.erase(screen)
+	cube1.draw(screen,q1,p1)
 
-cube3.erase(screen)
-cube3.draw(screen,q3,p3)
+	cube2.erase(screen)
+	cube2.draw(screen,q2,p2)
 
-cube4.erase(screen)
-cube4.draw(screen,q4,p4)
+	cube3.erase(screen)
+	cube3.draw(screen,q3,p3)
 
-cube5.erase(screen)
-cube5.draw(screen,q5,p5)
+	cube4.erase(screen)
+	cube4.draw(screen,q4,p4)
+
+	cube5.erase(screen)
+	cube5.draw(screen,q5,p5)
 
 
-# Madgwick
-Imupredict = MadgwickAHRS();
-Imupredict2 = MadgwickAHRS(); 
+	# Madgwick
+	Imupredict = MadgwickAHRS();
+	Imupredict2 = MadgwickAHRS(); 
 
-ImupredictES = MadgwickAHRS();
+	# A3 
+	omega0 = [0,0,0]
+	similaritywindowA3 = 0
+	Sc = []
+	Sg = []
+	C = []
+	G = []
+	Eg = 0
+	quatA3 = QuaternionClass(1, 0, 0, 0)
+	quatMuseAlg = QuaternionClass(1, 0, 0, 0)
 
-# A3 
-omega0 = [0,0,0]
-similaritywindowA3 = 0
-Sc = []
-Sg = []
-C = []
-G = []
-Eg = 0
-quatA3 = QuaternionClass(1, 0, 0, 0)
-quatMuseAlg = QuaternionClass(1, 0, 0, 0)
+	similaritywindowMUSE = 0
 
-similaritywindowMUSE = 0
+	initial = 0
+	update = 0
 
-initial = 0
-update = 0
+	Ax = []
+	Ay = []
+	Az = []
 
-Ax = []
-Ay = []
-Az = []
+	beta = 0.80
 
-beta = 0.80
-
-quat = QuaternionClass(1,0,0,0)
+	quat = QuaternionClass(1,0,0,0)
 # 1 Hz - 1000
 # 10 Hz - 100
-
-initialES = 0 
-updateES = 0 
-AxES = []
-AyES = []
-AzES = []
-similaritywindowES = 0
-quatES = QuaternionClass(1,0,0,0)
-
 
 
 while True: 
 	reading = ser.readline()
+	print(reading, file = filename)
 	# print(reading)
 	sp = str(reading).split(',')
 	# print(sp)
@@ -226,10 +183,9 @@ while True:
 
 
 	heading = float(sp[17].split('\\r')[0].strip())
-	# print("heading: ", heading, computeheading(mx,my))
+	# print("heading: ", heading)
 
-	# print("cheading: ", computeheading(mx,my))
-
+	# print(computeheading(mx,my))
 	# print(yaw, pitch, roll)
 
 	accel = [ax, ay, az]
@@ -252,7 +208,7 @@ while True:
 
 	# time_diff = 60
 
-	if True:  #quaternion from imu 
+	if visualIMU:  #quaternion from imu 
 		# yellow area facing straight if imu hold with usbside facing me
 		# print("yaw: ", yaw)
 		# q1w = float(sp[10].strip())
@@ -265,72 +221,42 @@ while True:
 		# print("yawMDP: ", yawMDP)
 
 		# quat = QuaternionClass(qw, qx, qy, -qz) *dq
-		# q1.w = quat[0]
-		# q1.x = quat[1]
-		# q1.z = quat[3]
-		# q1.y = quat[2]
-
-		# q1 = q1.normalized()
-
-		# cube1.erase(screen)
-		# cube1.draw(screen,q1,p1)
-
-		# print("yaw: ", yaw )
-
-		quat = QuaternionClass(qw, qx, qy, qz) 
 		q1.w = quat[0]
 		q1.x = quat[1]
-		q1.y = quat[3]
-		q1.z = -quat[2]
+		q1.z = quat[3]
+		q1.y = quat[2]
 
 		q1 = q1.normalized()
 
 		cube1.erase(screen)
 		cube1.draw(screen,q1,p1)
 
+		# print("yaw: ", yaw )
 
 
-	if True: # Madgwick Algorithm 
 
-		Imupredict.samplePeriod = dt#0.1
+	if visualIMU: # Madgwick Algorithm 
+		Imupredict.samplePeriod = 0.025#0.1
 		Imupredict.update(gyro,accel,mag)
 		quatMad = Imupredict.quaternion
 		quatMad = qnormalized(quatMad)
 		Imupredict.quaternion = quatMad
-				#quatMad = quatNormalized(quatMad)
-			
-		q2.w = quatMad[0]
-		q2.x = quatMad[1]
-		q2.z = -quatMad[2]
-		q2.y = quatMad[3]
-			
+		#quatMad = quatNormalized(quatMad)
+
+		yawMad, pitchMad, rollMad = QuatToEuler(quatMad)
+		# print("yawMad: ", yawMad*180/math.pi)
+
+		quat = QuaternionClass(quatMad[0], quatMad[1], quatMad[3], quatMad[2]) 
+		
+		q2.w = quat[0]
+		q2.x = quat[1]
+		q2.z = quat[3]
+		q2.y = quat[2]
+		
 
 		q2 = q2.normalized()
 		cube2.erase(screen)
 		cube2.draw(screen,q2,p2)
-
-
-		# Imupredict.samplePeriod = 0.025#0.1
-		# Imupredict.update(gyro,accel,mag)
-		# quatMad = Imupredict.quaternion
-		# quatMad = qnormalized(quatMad)
-		# Imupredict.quaternion = quatMad
-		# #quatMad = quatNormalized(quatMad)
-
-		# yawMad, pitchMad, rollMad = QuatToEuler(quatMad)
-		# print("yawMad: ", yawMad*180/math.pi)
-
-		# quat = QuaternionClass(quatMad[0], quatMad[1], quatMad[3], quatMad[2]) 
-		
-		# q2.w = quat[0]
-		# q2.x = quat[1]
-		# q2.z = quat[3]
-		# q2.y = quat[2]
-		
-
-		# q2 = q2.normalized()
-		# cube2.erase(screen)
-		# cube2.draw(screen,q2,p2)
 
 	if False: 
 
@@ -385,7 +311,7 @@ while True:
 
 
 
-	if True: #a3 
+	if visualIMU: #a3 
 
 		q_a3 = 0 
 
@@ -491,7 +417,7 @@ while True:
 		cube3.erase(screen)
 		cube3.draw(screen,q3,p3)
 
-	if True: # MUSE 
+	if visualIMU: # MUSE 
 	# 	# # Initial yaw, pitch, roll from Accelerometer and Magnetometer 
 		#yawAM, pitchAM, rollAM, quatAM = AccMag2Euler(accel, mag)
 		yawAM, pitchAM, rollAM, quatAM = androidAccMag2Euler(accel, mag)
@@ -663,107 +589,7 @@ while True:
 		cube4.erase(screen)
 		cube4.draw(screen,q4,p4)
 
-
-	if True:
-
-			omega1 = [gx, gy, gz]
-			quatG = IntegrationRK4(omega0, omega1, quatES, dt)
-			yawG, pitchG, rollG = QuatToEuler(quatG)
-			omega0 = omega1
-
-			ImupredictES.samplePeriod = dt 
-			ImupredictES.update(gyro,accel,mag)
-			quatMadES = ImupredictES.quaternion
-
-			yawAMES, pitchAMES, rollAMES, quatAMES = androidAccMag2Euler(accel, mag)
-
-			if initialES < 30:
-				quatES = quatAMES
-				print("initial")
-				initialES = initialES + 1 
-			else:
-				if similaritywindowES > 1: 
-					aAx = abs(np.array(AxES))
-					aAy = abs(np.array(AyES))
-					aAz = abs(np.array(AzES))
-
-					agAx = aAx 
-					agAy = aAy 
-					agAz = aAz - 9.8
-
-					aagAx = abs(agAx)
-					aagAy = abs(agAy)
-					aagAz = abs(agAz)
-					print(aagAz)
-
-					x_max = max(aagAx)
-					y_max = max(aagAy)
-					z_max = max(aagAz)
-
-					print(z_max)
-					if z_max < 1: 
-						updateES = 1
-
-					# xyz_min = min([x_max, y_max, z_max])
-
-					# if xyz_min < 1: 
-					# 	updateES = 1 
-
-					similaritywindowES = 0 
-					AxES = []
-					AyES = []
-					AzES = []
-
-				else: 
-					AxES.append(ax)
-					AyES.append(ay)
-					AzES.append(az)
-					similaritywindowES = similaritywindowES + dt
-
-				if updateES: 
-					quatES = quatAMES
-					print("update with quatES")
-				else:
-					quatES = quatG
-				updateES = 0
-				quatES = qnormalized(quatES)
-				ImupredictES.quaternion = quatES
-
-
-
-					# headingM = computeheading(mx,my)
-					# print("headingM: ", headingM)
-
-					# quatAM = Euler2Quat(headingM,0,0)
-					# quatAM = QuaternionClass(0,0,-1,0)
-
-
-
-			q5.w = quatES[0]
-			q5.x = quatES[1]
-			q5.y = quatES[3]
-			q5.z = -quatES[2]
-					
-			q5 = q5.normalized()
-			cube5.erase(screen)
-			cube5.draw(screen,q5,p5)
-
-
-
-	if False: 
-		roll, pitch, yaw = computerollandpitch(accel, mag)
-		quatES = Euler2Quat(yaw, pitch, roll)
-		q5.w = quatES[0]
-		q5.x = quatES[1]
-		q5.y = quatES[3]
-		q5.z = -quatES[2]
-		
-		q5 = q5.normalized()
-		cube5.erase(screen)
-		cube5.draw(screen,q5,p5)
-
-	if False: 
-		print("false")
+	if visualIMU: 
 
 		# quatDMP = QuaternionClass(qw, qx, qy, qz)
 
@@ -873,22 +699,23 @@ while True:
 		# q5.y = quatES[3]
 		
 
+		q5 = q5.normalized()
 
-		# q5 = q5.normalized()
 
-
-		# cube5.erase(screen)
-		# cube5.draw(screen,q5,p5)
-
+		cube5.erase(screen)
+		cube5.draw(screen,q5,p5)
 
 
 
-	pygame.display.flip()
-	pygame.time.delay(0)
-	event = pygame.event.poll()
-	if event.type == pygame.QUIT \
-		or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-		break
+	if visualIMU: 
+		
+
+		pygame.display.flip()
+		pygame.time.delay(0)
+		event = pygame.event.poll()
+		if event.type == pygame.QUIT \
+			or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+			break
 
 	# print(time)
 	# print(time-prev_time)

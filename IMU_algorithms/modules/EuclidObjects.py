@@ -3,7 +3,7 @@ import pygame
 import pygame.draw
 import pygame.time
 from math import sin, cos, acos
-from euclid import Vector3, Quaternion
+from modules.euclid import Vector3, Quaternion
 import numpy as np
 
 class Screen (object):

@@ -2,7 +2,7 @@
 import numpy as np
 import math
 from math import sin, cos, atan2, atan, asin
-from quaternion import QuaternionClass
+from modules.quaternion import QuaternionClass
 from numpy import linalg as LA
 
 

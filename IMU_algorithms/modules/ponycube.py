@@ -7,7 +7,7 @@ import pygame
 import pygame.draw
 import pygame.time
 from math import sin, cos, acos
-from euclid import *
+from modules.euclid import *
 
 class Screen (object):
     def __init__(self,x=320,y=280,scale=1):

@@ -1,4 +1,4 @@
-from mpulib import computeheading, attitudefromCompassGravity, RP_calculate, MadgwickQuaternionUpdate, Euler2Quat, quaternion_to_euler_angle, MPU9250_computeEuler
+from modules.mpulib import computeheading, attitudefromCompassGravity, RP_calculate, MadgwickQuaternionUpdate, Euler2Quat, quaternion_to_euler_angle, MPU9250_computeEuler
 import socket, traceback
 import csv
 import struct
@@ -9,17 +9,17 @@ import pygame.draw
 import pygame.time
 import numpy as np
 from math import sin, cos, acos
-from euclid import Vector3, Quaternion
-from EuclidObjects import Cube, Screen, Grid, PerspectiveScreen
+from modules.euclid import Vector3, Quaternion
+from modules.EuclidObjects import Cube, Screen, Grid, PerspectiveScreen
 
 import math
 
 # from pygame.locals import *
 # from ponycube import *
-from madgwickahrs import *
-import quaternion
-from quaternion import QuaternionClass
-from a3muse import androidAccMag2Euler, qnormalized, quatNormalized, IntegrationRK4, EulerToQuat, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat, AccMag2Euler
+from modules.madgwickahrs import *
+import modules.quaternion
+from modules.quaternion import QuaternionClass
+from modules.a3muse import androidAccMag2Euler, qnormalized, quatNormalized, IntegrationRK4, EulerToQuat, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat, AccMag2Euler
 from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
@@ -30,8 +30,12 @@ import matplotlib.pyplot as plt
 # filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_static_write.txt', 'r')
 # filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_static_write.txt', 'r')
 
+#IMU value file from MPU9250
 filename3 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/imu_movement_write.txt', 'r')
+
+#IMU value file from Optitrack
 filename1 = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/optitrack/optitrack_movement_write.txt', 'r')
+
 filenameIMU = open('/Users/eunsunlee/Documents/NESL/UnderwaterSensorTag/IMU_algorithms/YPRFiles/imu_optitrack_movement_values.txt', 'w')
 
 
@@ -105,6 +109,7 @@ q3 = Quaternion(1,0,0,0)
 
 q4 = Quaternion(1,0,0,0)
 q5 = Quaternion(1,0,0,0)
+
 
 p0 = Vector3(0,-100,0)
 p1 = Vector3(-400,100,0)
@@ -273,18 +278,19 @@ with filename3 as textfile1, filename1 as textfile2:
 			# Optitrack 
 			if True: 
 
-				op_q = QuaternionClass(op_qw, op_qz, op_qy, op_qx)# *QuaternionClass(np.sqrt(0.5),0,np.sqrt(0.5),0)
+				op_q = QuaternionClass(op_qw, op_qz, op_qy, op_qx) *QuaternionClass(np.sqrt(0.5),0,np.sqrt(0.5),0)
 
 				q0.w = op_q[0]
 				q0.x = op_q[1]
 				q0.y = op_q[3]
 				q0.z = op_q[2]
 
+
 				q0 = q0.normalized()
 
 				yawOP, pitchOP, rollOP = QuatToEuler([q0.w, q0.x, q0.y, q0.z])
 				# print(yawOP, pitchOP, rollOP, file = filenameOptitrack)
-				# print("quaternion: ", q0.w, q0.x, q0.y, q0.z )
+				print("quaternion: ", q0.w, q0.x, q0.y, q0.z )
 				# print("quattoeuler: ", QuatToEuler([q0.w, q0.x, q0.y, q0.z]))
 
 				cube0.erase(screen)
@@ -299,6 +305,7 @@ with filename3 as textfile1, filename1 as textfile2:
 				q1.x = quat[1]
 				q1.y = quat[2]
 				q1.z = quat[3]
+
 
 				q1 = q1.normalized()
 
@@ -429,6 +436,9 @@ with filename3 as textfile1, filename1 as textfile2:
 
 					q3.w = quatA3_temp[0]
 					q3.x = quatA3_temp[1]
+					# q3.y = quatA3_temp[2]
+					# q3.z = quatA3_temp[3]
+					#now 
 					q3.y = quatA3_temp[2]
 					q3.z = quatA3_temp[3]
 
@@ -618,7 +628,7 @@ with filename3 as textfile1, filename1 as textfile2:
 				cube4.erase(screen)
 				cube4.draw(screen,q4,p4)
 
-			if True:
+			if False:
 
 				omega1 = [gx, gy, gz]
 				quatG = IntegrationRK4(omega0, omega1, quatES, dt)

@@ -1,4 +1,6 @@
-from mpulib import computeheading, attitudefromCompassGravity
+# This code calibrates magnetometer. Please add the scale values to the other file codes when imu_algorithms are used. 
+
+from modules.mpulib import computeheading, attitudefromCompassGravity
 import socket, traceback
 import csv
 import struct
@@ -9,24 +11,24 @@ import pygame.draw
 import pygame.time
 import numpy as np
 from math import sin, cos, acos
-from euclid import Vector3, Quaternion
-from EuclidObjects import Cube, Screen, Grid, PerspectiveScreen
+from modules.euclid import Vector3, Quaternion
+from modules.EuclidObjects import Cube, Screen, Grid, PerspectiveScreen
 
 import math
 
 # from pygame.locals import *
 # from ponycube import *
-from madgwickahrs import *
-import quaternion
-from quaternion import QuaternionClass
-from a3muse import quatNormalized, IntegrationRK4, EulerToQuat, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
+from modules.madgwickahrs import *
+import modules.quaternion
+from modules.quaternion import QuaternionClass
+from modules.a3muse import quatNormalized, IntegrationRK4, EulerToQuat, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
 from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 # import euclid
 
-filename = open('mag_calib.txt','w')
+filename = open('mag_values_for_calibration.txt','w')
 
 i = 0
 

@@ -1,4 +1,7 @@
+
 # Author: eunsunlee
+# This code streams imu values form MPU9250 and shows the movement with pygame cube in selected algorithm.
+
 # partial source: https://github.com/chanlhock/IMU/blob/master/imu.py
 # integration of rk4: https://www.dis.uniroma1.it/~pretto/papers/tpm_icra2014.pdf
 # integration of rk4: https://github.com/scomup/imu_tools/blob/master/src/imu_tracker/common.h
@@ -15,15 +18,15 @@ import csv
 import struct
 import sys, time, string, pygame
 from pygame.locals import *
-from ponycube import *
-from madgwickahrs import *
-import quaternion
-from quaternion import QuaternionClass
-from a3muse import quatNormalized, IntegrationRK4, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
+from modules.ponycube import *
+from modules.madgwickahrs import *
+import modules.quaternion
+from modules.quaternion import QuaternionClass
+from modules.a3muse import quatNormalized, IntegrationRK4, AccMagOrientation, headingfromMag, QuatToEuler, angle_between, QuatToRotMat, AxisAngleToRotMat, RotMatToQuat
 from math import atan2, atan
 from numpy.linalg import inv
 from numpy import linalg as LA
-from mpulib import computeheading
+from modules.mpulib import computeheading
 
 
 
